@@ -143,6 +143,7 @@ async function handleLogin(event) {
       window.location.href = 'index.html';
     }, 600);
   } catch (err) {
+    console.error('Erreur de connexion:', err);
     showAlert(formatAuthError(err), 'danger');
   } finally {
     setBtnLoading('btnLoginSubmit', false);
@@ -185,6 +186,7 @@ async function handleRegister(event) {
     }, 400);
 
   } catch (err) {
+    console.error('Erreur inscription:', err);
     showAlert(formatAuthError(err), 'danger');
   } finally {
     setBtnLoading('btnRegisterSubmit', false);
