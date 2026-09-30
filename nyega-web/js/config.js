@@ -8,8 +8,8 @@
 window.NYEGA_CONFIG = {
   // Clés publiques Supabase (Anon Key - utilisable côté client en production)
   // Renseignez ici l'URL et la clé anonyme de votre projet Supabase
-  SUPABASE_URL: 'https://votre-projet.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.votre_cle_anon_ici',
+  SUPABASE_URL: 'https://vkvoyqisypvlozaxyaxo.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrdm95cWlzeXB2bG96YXh5YXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4MDE2NjEsImV4cCI6MjEwNjM3NzY2MX0.zB4V0wu_JoruHOK0o9qjFH_7DD11rOCaB7WxzPclNLw',
 
   // Détection du mode développement : actif uniquement en local (localhost / 127.0.0.1 / file://) ou via ?dev=true
   isDevMode: function() {
