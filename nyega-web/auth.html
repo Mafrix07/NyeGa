@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Connexion & Inscription — NyeGa</title>
+  <meta name="description" content="NyeGa - Application de gestion de budget pour étudiants. Own your spending.">
+  <link rel="icon" href="img/favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/nyega-theme.css">
+  <link rel="stylesheet" href="css/nyega-app.css">
+</head>
+<body>
+
+  <div class="ny-auth-wrapper">
+    <div class="ny-auth-card">
+
+      <!-- LOGO OFFICIEL (Apparaît UNIQUEMENT sur cet écran) -->
+      <div class="ny-auth-logo-wrap">
+        <img src="img/logo/Logo_SANS_FOND.png" alt="NyeGa — Own your spending" class="ny-auth-logo-img">
+      </div>
+      <p class="ny-auth-subtitle">Votre allié budget pour vivre vos études sereinement.</p>
+
+      <!-- Message Alerte Erreur / Succès -->
+      <div id="authAlert" class="ny-alert ny-alert-danger" style="display: none;">
+        <i class="fa fa-exclamation-circle"></i>
+        <span id="authAlertText">Une erreur est survenue.</span>
+      </div>
+
+      <!-- Onglets Connexion / Inscription -->
+      <div class="ny-auth-tabs">
+        <button type="button" class="ny-auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">
+          <i class="fa fa-sign-in"></i> Connexion
+        </button>
+        <button type="button" class="ny-auth-tab" id="tabRegister" onclick="switchAuthTab('register')">
+          <i class="fa fa-user-plus"></i> Inscription
+        </button>
+      </div>
+
+      <!-- FORMULAIRE DE CONNEXION -->
+      <form id="formLogin" onsubmit="handleLogin(event)">
+        <div class="ny-form-group text-left">
+          <label for="loginEmail">Adresse Email</label>
+          <input type="email" id="loginEmail" class="ny-form-control" placeholder="etudiant@universite.fr" required>
+        </div>
+
+        <div class="ny-form-group text-left">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label for="loginPassword" class="mb-0">Mot de passe</label>
+          </div>
+          <input type="password" id="loginPassword" class="ny-form-control" placeholder="••••••••" required minlength="6">
+        </div>
+
+        <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" id="btnLoginSubmit">
+          <span class="btn-text">Se connecter</span>
+          <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
+        </button>
+      </form>
+
+      <!-- FORMULAIRE D'INSCRIPTION -->
+      <form id="formRegister" onsubmit="handleRegister(event)" style="display: none;">
+        <div class="ny-form-group text-left">
+          <label for="regFullName">Nom et prénom</label>
+          <input type="text" id="regFullName" class="ny-form-control" placeholder="Alexandre Martin" required>
+        </div>
+
+        <div class="ny-form-group text-left">
+          <label for="regEmail">Adresse Email</label>
+          <input type="email" id="regEmail" class="ny-form-control" placeholder="etudiant@universite.fr" required>
+        </div>
+
+        <div class="ny-form-group text-left">
+          <label for="regPassword">Mot de passe (min. 6 caractères)</label>
+          <input type="password" id="regPassword" class="ny-form-control" placeholder="••••••••" required minlength="6">
+        </div>
+
+        <div class="ny-form-group text-left">
+          <label for="regPasswordConfirm">Confirmer le mot de passe</label>
+          <input type="password" id="regPasswordConfirm" class="ny-form-control" placeholder="••••••••" required minlength="6">
+        </div>
+
+        <button type="submit" class="ny-btn ny-btn-secondary ny-btn-block" id="btnRegisterSubmit">
+          <span class="btn-text">Créer mon compte NyeGa</span>
+          <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
+        </button>
+      </form>
+
+      <!-- ÉCRAN INITIAL DE BUDGET (Demandé à l'étudiant dès l'inscription) -->
+      <div id="screenOnboardingBudget" style="display: none;">
+        <div class="text-center mb-3">
+          <span class="badge badge-primary px-3 py-1 mb-2" style="background:var(--ny-primary); font-size:12px;">
+            🎓 Étape 2/2 : Votre Budget
+          </span>
+          <h4 class="font-weight-bold" style="color:var(--ny-primary);">Quel est votre budget pour ce mois ?</h4>
+          <p class="text-muted small">
+            NyeGa adapte vos jauges et calculs selon le montant réel dont vous disposez en FCFA pour le mois.
+          </p>
+        </div>
+
+        <form id="formOnboardingBudget" onsubmit="handleSaveInitialBudget(event)">
+          <div class="ny-form-group text-left">
+            <label for="onboardingBudgetAmount">Budget mensuel prévu (en FCFA)</label>
+            <input type="number" id="onboardingBudgetAmount" class="ny-form-control text-center font-weight-bold" style="font-size:24px; color:var(--ny-primary);" placeholder="0 FCFA" min="1000" step="500" required autofocus>
+          </div>
+
+          <!-- Raccourcis de montants typiques pour étudiants au Togo -->
+          <div class="d-flex justify-content-center flex-wrap mb-4" style="gap:8px;">
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="setOnboardingBudget(30000)">30 000 F</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="setOnboardingBudget(50000)">50 000 F</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="setOnboardingBudget(75000)">75 000 F</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="setOnboardingBudget(100000)">100 000 F</button>
+          </div>
+
+          <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" id="btnOnboardingBudgetSubmit">
+            <span class="btn-text"><i class="fa fa-check mr-2"></i> Valider mon budget et commencer</span>
+            <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/popper.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <!-- Supabase JS Client via CDN officiel -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>NyeGa — Gestion de Budget Étudiant (Togo)</title>
+  <meta name="description" content="NyeGa - L'application web mobile-first de gestion de budget pour étudiants togolais. Catégorisation automatique et devises FCFA.">
+  <link rel="icon" href="img/favicon.ico">
+
+  <!-- Frameworks & Design Tokens -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/nyega-theme.css">
+  <link rel="stylesheet" href="css/nyega-app.css">
+</head>
+<body class="ny-app-shell">
+
+  <!-- ==========================================================
+       HEADER (Aucun logo image ici - Réservé à auth.html)
+       ========================================================== -->
+  <header class="ny-header">
+    <div class="ny-header-inner">
+      <a href="#accueil" class="ny-brand-title" onclick="navigateToScreen('accueil')">
+        <span class="ny-brand-logo-text">
+          <span class="ny-part-nye">Nye</span><span class="ny-part-ga">Ga</span>
+        </span>
+        <span class="ny-brand-tagline">Own your spending • Lomé</span>
+      </a>
+
+      <!-- Desktop Navigation Bar -->
+      <nav class="ny-desktop-nav">
+        <a class="ny-nav-item active" data-screen="accueil" onclick="navigateToScreen('accueil')">
+          <i class="fa fa-home"></i> Accueil
+        </a>
+        <a class="ny-nav-item" data-screen="ajout" onclick="navigateToScreen('ajout')">
+          <i class="fa fa-plus-circle"></i> Ajouter
+        </a>
+        <a class="ny-nav-item" data-screen="historique" onclick="navigateToScreen('historique')">
+          <i class="fa fa-list"></i> Historique
+        </a>
+        <a class="ny-nav-item" data-screen="analyse" onclick="navigateToScreen('analyse')">
+          <i class="fa fa-pie-chart"></i> Analyse
+        </a>
+        <a class="ny-nav-item" data-screen="budget" onclick="navigateToScreen('budget')">
+          <i class="fa fa-sliders"></i> Budget
+        </a>
+      </nav>
+
+      <!-- Profil & Actions -->
+      <div class="ny-header-actions">
+        <div class="ny-user-chip" id="userProfileChip">
+          <div class="ny-user-avatar" id="userAvatarText">É</div>
+          <span id="userDisplayName" class="d-none d-sm-inline">Étudiant</span>
+        </div>
+        <button type="button" class="ny-btn-logout" title="Déconnexion" onclick="handleLogout()">
+          <i class="fa fa-sign-out"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast flottant -->
+  <div id="nyegaToast" class="ny-toast">Notification</div>
+
+  <!-- BANNIÈRE INDICATRICE DU MODE DE PERSISTANCE -->
+  <div id="connectionBanner" class="bg-warning text-dark py-1 px-3 text-center small font-weight-bold" style="display:none;">
+    <i class="fa fa-info-circle mr-1"></i>
+    <span id="bannerText">Mode local actif (FCFA). Connectez Supabase pour persister en ligne et activer l'IA.</span>
+    <button class="btn btn-sm btn-outline-dark py-0 px-2 ml-2" onclick="openConfigModal()">Configurer Supabase</button>
+  </div>
+
+  <!-- ==========================================================
+       MAIN CONTENT CONTAINER
+       ========================================================== -->
+  <main class="ny-main-container">
+
+    <!-- ========================================================
+         ÉCRAN 2 : ACCUEIL (Dashboard)
+         ======================================================== -->
+    <section id="screen-accueil" class="ny-screen active">
+
+      <!-- Carte Principale : Budget Disponible & Statut -->
+      <div class="ny-budget-hero-card">
+        <div class="ny-budget-hero-top">
+          <div>
+            <div class="ny-budget-hero-label">Budget restant disponible</div>
+            <div class="ny-budget-remaining-amount" id="homeRemainingAmount">-- FCFA</div>
+          </div>
+          <!-- Indicateur de Statut Vert / Orange / Rouge -->
+          <div class="ny-status-pill status-green" id="homeStatusPill">
+            <i class="fa fa-circle" id="homeStatusIcon"></i>
+            <span id="homeStatusText">Budget Sain</span>
+          </div>
+        </div>
+
+        <!-- Jauge visuelle de consommation -->
+        <div class="ny-progress-wrap">
+          <div class="ny-progress-labels">
+            <span>Dépensé : <strong id="homeSpentAmount">-- FCFA</strong></span>
+            <span>Budget total : <strong id="homeTotalBudget">-- FCFA</strong></span>
+          </div>
+          <div class="ny-progress-bar-bg">
+            <div class="ny-progress-bar-fill fill-green" id="homeProgressBar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carte Budget Journalier Recommandé (Calculé) -->
+      <div class="ny-daily-card">
+        <div class="ny-daily-left">
+          <div class="ny-daily-icon">
+            <i class="fa fa-calendar-check-o"></i>
+          </div>
+          <div>
+            <div class="ny-daily-title">Budget journalier conseillé</div>
+            <div class="ny-daily-amount" id="homeDailyAmount">-- FCFA / jour</div>
+          </div>
+        </div>
+        <div class="ny-daily-right">
+          <div><strong id="homeDaysLeft">--</strong> jours restants</div>
+          <span class="small text-muted" id="homePeriodEnd">Jusqu'au --</span>
+        </div>
+      </div>
+
+      <!-- Résumé Dépenses Récentes -->
+      <div class="ny-card">
+        <div class="ny-card-header">
+          <h2 class="ny-card-title"><i class="fa fa-clock-o"></i> Dernières Dépenses</h2>
+          <button type="button" class="ny-btn ny-btn-primary ny-btn-sm" onclick="navigateToScreen('ajout')">
+            <i class="fa fa-plus"></i> Ajouter
+          </button>
+        </div>
+        <div id="homeRecentExpensesList" class="ny-expense-list">
+          <!-- Chargement dynamique -->
+          <div class="text-center py-4 text-muted"><i class="fa fa-spinner fa-spin mr-2"></i> Chargement des dépenses...</div>
+        </div>
+        <div class="text-center mt-3">
+          <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="navigateToScreen('historique')">
+            Voir tout l'historique <i class="fa fa-arrow-right ml-1"></i>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================
+         ÉCRAN 3 : AJOUT RAPIDE AVEC CATÉGORISATION AUTOMATIQUE
+         ======================================================== -->
+    <section id="screen-ajout" class="ny-screen">
+      <div class="ny-card">
+        <div class="ny-card-header">
+          <h2 class="ny-card-title"><i class="fa fa-bolt"></i> Nouvelle Dépense</h2>
+          <span class="badge badge-light border text-muted">Catégorisation automatique</span>
+        </div>
+
+        <form id="formAddExpense" onsubmit="handleCreateExpense(event)">
+          <!-- Montant en FCFA -->
+          <div class="ny-form-group">
+            <label for="expenseAmount">Montant (en FCFA)</label>
+            <input type="number" step="1" min="1" id="expenseAmount" class="ny-form-control ny-input-amount" placeholder="0 FCFA" required autofocus>
+          </div>
+
+          <!-- Boutons de montants rapides adaptés au Togo -->
+          <div class="ny-quick-amounts">
+            <div class="ny-quick-chip" onclick="setQuickAmount(100)">+ 100 F</div>
+            <div class="ny-quick-chip" onclick="setQuickAmount(200)">+ 200 F</div>
+            <div class="ny-quick-chip" onclick="setQuickAmount(500)">+ 500 F</div>
+            <div class="ny-quick-chip" onclick="setQuickAmount(1000)">+ 1 000 F</div>
+            <div class="ny-quick-chip" onclick="setQuickAmount(2000)">+ 2 000 F</div>
+            <div class="ny-quick-chip" onclick="setQuickAmount(5000)">+ 5 000 F</div>
+          </div>
+
+          <!-- Description libre (L'étudiant ne choisit PAS la catégorie) -->
+          <div class="ny-form-group">
+            <label for="expenseDescription">Description libre de la dépense</label>
+            <input type="text" id="expenseDescription" class="ny-form-control" placeholder="Ex: Zem pour campus, ayimolou + oeuf, forfait moov, maquis..." required oninput="onDescriptionInputChange()" maxlength="100">
+            <small class="text-muted">NyeGa détermine automatiquement la catégorie grâce à vos habitudes et à l'IA.</small>
+          </div>
+
+          <!-- Pastille de catégorie automatique (Modifiable en 1 tap) -->
+          <div class="ny-auto-category-box">
+            <div>
+              <span class="small font-weight-bold d-block" style="color:var(--ny-primary);">
+                <i class="fa fa-magic mr-1"></i> Catégorie détectée :
+              </span>
+              <span class="small text-muted">Tapotez la pastille pour corriger en 1 tap si besoin</span>
+            </div>
+            <div id="detectedCategoryPill" class="ny-auto-category-pill" onclick="open1TapCategoryPicker('form')">
+              <i id="detectedCategoryIcon" class="fa fa-tag"></i>
+              <span id="detectedCategoryName">Autres</span>
+              <span id="detectedCategorySource" class="ny-pill-source-badge">auto</span>
+              <i class="fa fa-caret-down ml-1 text-muted"></i>
+            </div>
+          </div>
+          <input type="hidden" id="selectedCategoryId" value="">
+
+          <!-- Date & Moyen de paiement -->
+          <div class="row">
+            <div class="col-12 col-md-6">
+              <div class="ny-form-group">
+                <label for="expenseDate">Date de la dépense</label>
+                <input type="date" id="expenseDate" class="ny-form-control" required>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="ny-form-group">
+                <label for="expensePaymentMethod">Moyen de paiement</label>
+                <select id="expensePaymentMethod" class="ny-form-control">
+                  <option value="Espèces">Espèces (Cash)</option>
+                  <option value="TMoney">TMoney</option>
+                  <option value="Flooz">Moov Flooz</option>
+                  <option value="Carte">Carte bancaire</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" id="btnAddExpenseSubmit">
+            <span class="btn-text"><i class="fa fa-check mr-2"></i> Enregistrer immédiatement</span>
+            <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         ÉCRAN 4 : HISTORIQUE DES DÉPENSES
+         ======================================================== -->
+    <section id="screen-historique" class="ny-screen">
+      <div class="ny-card">
+        <div class="ny-card-header">
+          <h2 class="ny-card-title"><i class="fa fa-history"></i> Historique des Dépenses</h2>
+          <span class="badge badge-light border" id="historyCountBadge">0 dépense</span>
+        </div>
+
+        <!-- Filtres et Tri -->
+        <div class="ny-history-filters">
+          <div class="ny-filter-select">
+            <label class="small text-muted font-weight-bold mb-1">Filtrer par catégorie</label>
+            <select id="historyFilterCategory" class="ny-form-control" onchange="loadHistoryExpenses()">
+              <option value="all">Toutes les catégories</option>
+            </select>
+          </div>
+          <div class="ny-filter-select">
+            <label class="small text-muted font-weight-bold mb-1">Trier par</label>
+            <select id="historySortBy" class="ny-form-control" onchange="loadHistoryExpenses()">
+              <option value="date-desc">Date (les plus récentes)</option>
+              <option value="date-asc">Date (les plus anciennes)</option>
+              <option value="amount-desc">Montant (décroissant)</option>
+              <option value="amount-asc">Montant (croissant)</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="small text-muted mb-3">
+          <i class="fa fa-info-circle mr-1"></i> Astuce : Cliquez sur la pastille d'une catégorie pour la corriger en 1 tap. NyeGa s'en souviendra automatiquement !
+        </p>
+
+        <!-- Liste des dépenses -->
+        <div id="fullExpensesList" class="ny-expense-list">
+          <!-- Chargement dynamique -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         ÉCRAN 5 : ANALYSE & RÉPARTITION
+         ======================================================== -->
+    <section id="screen-analyse" class="ny-screen">
+      <div class="ny-card">
+        <div class="ny-card-header">
+          <h2 class="ny-card-title"><i class="fa fa-pie-chart"></i> Répartition par Catégorie</h2>
+        </div>
+
+        <!-- Graphique Chart.js interactif -->
+        <div class="ny-chart-wrapper">
+          <canvas id="categoryDonutChart"></canvas>
+        </div>
+
+        <!-- Chiffres clés de l'analyse -->
+        <div class="ny-analytics-summary mt-4">
+          <div class="ny-stat-box">
+            <div class="ny-stat-box-label">Dépense moyenne / jour</div>
+            <div class="ny-stat-box-value" id="statsAvgPerDay">-- FCFA</div>
+          </div>
+          <div class="ny-stat-box">
+            <div class="ny-stat-box-label">Poste de dépense principal</div>
+            <div class="ny-stat-box-value" id="statsTopCategory">--</div>
+          </div>
+          <div class="ny-stat-box">
+            <div class="ny-stat-box-label">Plus grosse dépense</div>
+            <div class="ny-stat-box-value text-danger" id="statsMaxExpense">-- FCFA</div>
+          </div>
+        </div>
+
+        <!-- Tableau détaillé de ventilation -->
+        <h5 class="font-weight-bold mb-3" style="color:var(--ny-primary);">Détail des dépenses en FCFA</h5>
+        <div class="table-responsive">
+          <table class="ny-breakdown-table">
+            <thead>
+              <tr>
+                <th>Catégorie</th>
+                <th>Montant</th>
+                <th>Part</th>
+              </tr>
+            </thead>
+            <tbody id="analyticsTableBody">
+              <!-- Rempli dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         ÉCRAN 6 : MODIFICATION DU BUDGET
+         ======================================================== -->
+    <section id="screen-budget" class="ny-screen">
+      <div class="ny-card">
+        <div class="ny-card-header">
+          <h2 class="ny-card-title"><i class="fa fa-sliders"></i> Configuration du Budget</h2>
+        </div>
+
+        <p class="text-muted small">
+          Ajustez votre budget alloué pour le mois ou le cycle en cours. L'accueil et le budget journalier recommandé seront immédiatement recalculés en FCFA.
+        </p>
+
+        <form id="formBudgetSettings" onsubmit="handleSaveBudget(event)">
+          <div class="ny-form-group">
+            <label for="budgetAmount">Montant du budget mensuel (en FCFA)</label>
+            <input type="number" step="500" min="0" id="budgetAmount" class="ny-form-control font-weight-bold text-primary" style="font-size: 24px;" placeholder="50000" required>
+            <small class="text-muted">Exemple : 50 000 FCFA pour le mois d'un étudiant à Lomé.</small>
+          </div>
+
+          <div class="row">
+            <div class="col-12 col-md-6">
+              <div class="ny-form-group">
+                <label for="budgetStartDate">Début du cycle / période</label>
+                <input type="date" id="budgetStartDate" class="ny-form-control" required>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="ny-form-group">
+                <label for="budgetEndDate">Fin du cycle / période</label>
+                <input type="date" id="budgetEndDate" class="ny-form-control" required>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" id="btnSaveBudget">
+            <span class="btn-text"><i class="fa fa-save mr-2"></i> Mettre à jour mon budget</span>
+            <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Astuces Gestion Étudiante au Togo -->
+      <div class="ny-card" style="background:var(--ny-primary-container); border-color:rgba(0,45,122,0.15);">
+        <h5 class="font-weight-bold" style="color:var(--ny-primary);"><i class="fa fa-lightbulb-o"></i> Conseil NyeGa pour Étudiant</h5>
+        <p class="mb-0 small" style="color:var(--ny-primary);">
+          Anticipez vos recharges de <strong>connexion internet</strong> et vos trajets en <strong>zem</strong> en début de semaine pour ne pas être pris au dépourvu !
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================
+       MOBILE BOTTOM NAVIGATION BAR (Flutter-style)
+       ========================================================== -->
+  <nav class="ny-bottom-nav">
+    <a class="ny-bottom-tab active" data-screen="accueil" onclick="navigateToScreen('accueil')">
+      <i class="fa fa-home"></i>
+      <span>Accueil</span>
+    </a>
+    <a class="ny-bottom-tab" data-screen="historique" onclick="navigateToScreen('historique')">
+      <i class="fa fa-list-alt"></i>
+      <span>Historique</span>
+    </a>
+    <a class="ny-bottom-tab ny-tab-add" data-screen="ajout" onclick="navigateToScreen('ajout')">
+      <div class="ny-add-icon-bubble">
+        <i class="fa fa-plus"></i>
+      </div>
+      <span>Ajouter</span>
+    </a>
+    <a class="ny-bottom-tab" data-screen="analyse" onclick="navigateToScreen('analyse')">
+      <i class="fa fa-pie-chart"></i>
+      <span>Analyse</span>
+    </a>
+    <a class="ny-bottom-tab" data-screen="budget" onclick="navigateToScreen('budget')">
+      <i class="fa fa-sliders"></i>
+      <span>Budget</span>
+    </a>
+  </nav>
+
+  <!-- ==========================================================
+       MODALE 1-TAP CATEGORY PICKER (Correction rapide en 1 tap)
+       ========================================================== -->
+  <div id="modal1TapCategory" class="ny-1tap-popover" style="display:none;" onclick="if(event.target===this)close1TapCategoryPicker()">
+    <div class="ny-1tap-content">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="m-0 font-weight-bold" style="color:var(--ny-primary);">
+          <i class="fa fa-hand-pointer-o mr-1"></i> Choisir la catégorie (1 tap)
+        </h5>
+        <button type="button" class="close" onclick="close1TapCategoryPicker()">&times;</button>
+      </div>
+      <p class="small text-muted mb-3">
+        Touchez la bonne catégorie. NyeGa enregistrera la règle pour vos prochaines dépenses similaires !
+      </p>
+      <div class="ny-1tap-grid" id="category1TapList">
+        <!-- Rempli dynamiquement avec les 7 catégories togolaises -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       MODALE DE MODIFICATION D'UNE DÉPENSE
+       ========================================================== -->
+  <div id="modalEditExpense" class="ny-modal-backdrop" style="display:none;">
+    <div class="ny-modal-box">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="m-0 font-weight-bold" style="color:var(--ny-primary);"><i class="fa fa-pencil"></i> Modifier la dépense</h4>
+        <button type="button" class="close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form onsubmit="handleUpdateExpense(event)">
+        <input type="hidden" id="editExpenseId">
+        <div class="ny-form-group">
+          <label for="editExpenseAmount">Montant (FCFA)</label>
+          <input type="number" step="1" min="1" id="editExpenseAmount" class="ny-form-control font-weight-bold" required>
+        </div>
+        <div class="ny-form-group">
+          <label for="editExpenseCategory">Catégorie</label>
+          <select id="editExpenseCategory" class="ny-form-control" required></select>
+        </div>
+        <div class="ny-form-group">
+          <label for="editExpenseDesc">Description</label>
+          <input type="text" id="editExpenseDesc" class="ny-form-control" required>
+        </div>
+        <div class="ny-form-group">
+          <label for="editExpenseDate">Date</label>
+          <input type="date" id="editExpenseDate" class="ny-form-control" required>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4" style="gap:10px;">
+          <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="closeEditModal()">Annuler</button>
+          <button type="submit" class="ny-btn ny-btn-primary ny-btn-sm">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODALE CONFIGURATION SUPABASE -->
+  <div id="configModal" class="ny-modal-backdrop" style="display:none;">
+    <div class="ny-modal-box">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="m-0 font-weight-bold" style="color:var(--ny-primary);"><i class="fa fa-database"></i> Paramètres Supabase</h4>
+        <button type="button" class="close" onclick="closeConfigModal()">&times;</button>
+      </div>
+      <form onsubmit="handleSaveConfig(event)">
+        <div class="ny-form-group text-left">
+          <label for="cfgUrl">Supabase URL</label>
+          <input type="url" id="cfgUrl" class="ny-form-control" required>
+        </div>
+        <div class="ny-form-group text-left">
+          <label for="cfgAnonKey">Supabase Anon Key</label>
+          <textarea id="cfgAnonKey" class="ny-form-control" rows="3" required></textarea>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4" style="gap:10px;">
+          <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="closeConfigModal()">Annuler</button>
+          <button type="submit" class="ny-btn ny-btn-primary ny-btn-sm">Enregistrer et actualiser</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODALE DE SAISIE DU BUDGET INITIAL (Demandé à l'étudiant dès son arrivée) -->
+  <div id="modalInitialBudget" class="ny-modal-backdrop" style="display:none; z-index:10000; background:rgba(0, 45, 122, 0.85); backdrop-filter:blur(4px);">
+    <div class="ny-modal-box text-center" style="max-width:440px;">
+      <div class="mb-3">
+        <span class="badge badge-primary px-3 py-1 mb-2" style="background:var(--ny-primary); font-size:12px;">
+          🎓 Bienvenue sur NyeGa !
+        </span>
+        <h4 class="font-weight-bold" style="color:var(--ny-primary);">Quel est votre budget pour ce mois ?</h4>
+        <p class="text-muted small">
+          Indiquez le montant dont vous disposez en FCFA ce mois-ci pour calibrer votre tableau de bord et vos alertes.
+        </p>
+      </div>
+      <form onsubmit="handleInitialModalBudgetSubmit(event)">
+        <div class="ny-form-group">
+          <input type="number" id="initialModalBudgetAmount" class="ny-form-control text-center font-weight-bold" style="font-size:26px; color:var(--ny-primary);" placeholder="Ex: 50000" min="1000" step="500" required autofocus>
+          <small class="text-muted d-block mt-1">Montant mensuel en FCFA</small>
+        </div>
+        <div class="d-flex justify-content-center flex-wrap mb-4" style="gap:8px;">
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalQuickBudget(30000)">30 000 F</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalQuickBudget(50000)">50 000 F</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalQuickBudget(75000)">75 000 F</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalQuickBudget(100000)">100 000 F</button>
+        </div>
+        <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" id="btnModalInitialBudgetSubmit">
+          <span class="btn-text"><i class="fa fa-check mr-2"></i> Valider mon budget et démarrer</span>
+          <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/popper.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <!-- Chart.js via CDN officiel pour graphiques interactifs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Supabase JS via CDN officiel -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- NyeGa App Scripts (incluant dictionnaire local et client Supabase) -->
+  <script src="js/config.js"></script>
+  <script src="js/local-dictionary.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

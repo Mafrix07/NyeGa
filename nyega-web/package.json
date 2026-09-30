@@ -1,0 +1,12 @@
+{
+  "name": "nyega-web",
+  "version": "1.0.0",
+  "description": "Application web mobile-first de gestion de budget pour étudiants NyeGa",
+  "scripts": {
+    "start": "npx serve -s . -l 3000",
+    "dev": "npx serve -s . -l 3000"
+  },
+  "keywords": ["nyega", "budget", "etudiant", "supabase", "finance"],
+  "author": "NyeGa Team",
+  "license": "MIT"
+}

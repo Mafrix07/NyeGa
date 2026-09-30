@@ -1,0 +1,34 @@
+Corrige ces points dans le code existant, puis liste ce que tu as changé.
+
+1. MODÈLE IA : gemini-2.0-flash-lite est arrêté depuis le 1er juin 2026.
+   Remplace-le par gemini-3.1-flash-lite (valeur par défaut) dans le code,
+   le README et les .env.example. Le modèle reste configurable via
+   GEMINI_MODEL. Ajoute dans l'Edge Function un console.error explicite
+   (code HTTP + message) quand l'appel Gemini échoue, sans exposer la clé.
+   Note dans le README : "vérifier régulièrement la page des dépréciations
+   Gemini, les modèles sont retirés sans préavis long".
+
+2. RATE LIMIT : supprime les politiques INSERT/UPDATE/DELETE de
+   rate_limits pour les utilisateurs. RLS activée, aucun accès direct côté
+   client. L'Edge Function utilise SUPABASE_SERVICE_ROLE_KEY (jamais dans
+   le frontend) pour lire/écrire le compteur, idéalement via une fonction
+   SQL qui incrémente de façon atomique. Vérifie que la clé service_role
+   n'apparaît dans aucun fichier du dossier nyega-web.
+
+3. SUPABASE EN PRODUCTION : retire (ou masque hors mode développement) les
+   boutons de configuration de l'URL et de la clé Supabase. Garde la clé
+   anon dans config.js.
+
+4. LOCALSTORE : supprime le stockage local de secours pour les dépenses.
+   Si Supabase est injoignable, affiche un message clair en français et
+   ne prétends pas que la dépense est enregistrée.
+
+5. MOT-CLÉ : avant de choisir le mot-clé, écris 15 tests unitaires avec
+   des phrases togolaises réalistes ("zem pour aller à la fac", "pâte et
+   sauce au resto", "gloss et lait de corps"...) et affiche le mot-clé
+   retenu pour chacune. Corrige l'algorithme si le résultat est mauvais
+   (préfère les mots du dictionnaire, puis les noms, pas la longueur).
+
+6. ONBOARDING : si l'étudiant ferme la fenêtre du budget sans le saisir,
+   redirige-le vers cette saisie au prochain chargement au lieu d'afficher
+   un accueil vide.

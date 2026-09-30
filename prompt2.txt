@@ -1,0 +1,63 @@
+# Contexte
+
+L'application web Nyega existe déjà (template + palette du logo). Ne
+la recrée pas : modifie l'existant. Cible : étudiants togolais.
+Devise : FCFA (entiers, sans centimes, fonction formatFCFA()).
+
+# Objectif : ajout de dépense avec catégorisation automatique
+
+L'étudiant saisit un montant + une description libre. Il ne choisit pas
+la catégorie : elle est déterminée automatiquement.
+
+Catégories : Alimentation, Transport, Soins et beauté, Connexion internet,
+Crédit d'appel, Plaisirs, Autres.
+
+# Ordre de classification (du moins cher au plus cher)
+
+1. Mémoire utilisateur : table category_rules (mot-clé → catégorie),
+   alimentée par les corrections de l'utilisateur. Si un mot-clé
+   correspond, aucun appel IA.
+2. Mots-clés locaux : dictionnaire embarqué (zem, taxi, moto, pain,
+   riz, pâte, sauce, gloss, tresses, mèches, forfait, Togocom, Moov,
+   maquis...). Si correspondance nette, aucun appel IA.
+3. IA (Gemini Flash-Lite) via une Supabase Edge Function, uniquement si
+   les étapes 1 et 2 ne tranchent pas.
+4. Si l'IA échoue, dépasse 4 secondes ou renvoie une confiance < 0.6 :
+   catégorie "Autres", signalée clairement, sans bloquer l'enregistrement.
+
+# Edge Function (obligatoire)
+
+- La clé Gemini est stockée en secret Supabase (GEMINI_API_KEY), jamais
+  dans le code web ni le dépôt. Fournis .env.example sans clé réelle.
+- Le fournisseur d'IA est isolé dans un seul fichier, pour pouvoir
+  changer de modèle ou de fournisseur sans toucher au reste.
+- Vérifie que l'utilisateur est authentifié (JWT Supabase).
+- Limite la description à 100 caractères.
+- Limite de requêtes par utilisateur (ex. 30 par heure) pour protéger le
+  quota gratuit.
+- Prompt système : liste fermée des catégories, exemples togolais, et
+  réponse en JSON strict { "category": "...", "confidence": 0-1 }.
+  Valide le JSON côté serveur : toute catégorie hors liste devient
+  "Autres".
+- Gère explicitement l'erreur 429 (quota atteint) : bascule vers le plan B
+  sans message d'erreur pour l'utilisateur.
+- N'envoie à l'IA que la description, jamais le nom, l'email ou le
+  montant.
+
+# Expérience utilisateur
+
+- La dépense est enregistrée immédiatement ; la catégorie s'affiche en
+  pastille modifiable en UN tap.
+- Quand l'utilisateur corrige, enregistre le mot-clé → catégorie dans
+  category_rules (par utilisateur, protégé par RLS).
+- États de chargement légers, adaptés aux connexions lentes.
+- Montants rapides : 100, 200, 500, 1 000, 2 000, 5 000 FCFA.
+
+# Livrables
+
+1. Le code de l'Edge Function + le fichier isolant le fournisseur d'IA.
+2. Le dictionnaire de mots-clés locaux.
+3. La migration SQL (category_rules + RLS).
+4. Les modifications de l'écran d'ajout et de l'historique.
+5. Un README : obtenir la clé Gemini, la stocker en secret Supabase,
+   déployer la fonction, changer de modèle.

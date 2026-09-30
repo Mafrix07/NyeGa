@@ -1,0 +1,1183 @@
+/**
+ * NYEGA WEB APPLICATION - Mobile-first & Desktop Responsive Styles
+ * Inherits typography, radii, spacing and layout from VaultEdge template
+ */
+
+/* ==========================================================
+   APP LAYOUT & WRAPPER
+   ========================================================== */
+.ny-app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ny-background);
+}
+
+/* Container responsive mobile-first */
+.ny-main-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 16px 100px 16px; /* 100px bottom padding for mobile navbar */
+  flex: 1;
+}
+
+@media (min-width: 992px) {
+  .ny-main-container {
+    padding-top: 30px;
+    padding-bottom: 50px;
+  }
+}
+
+/* ==========================================================
+   APP HEADER (Desktop & Mobile)
+   ========================================================== */
+.ny-header {
+  background: var(--ny-primary);
+  color: var(--ny-on-primary);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--ny-shadow-sm);
+}
+
+.ny-header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ny-brand-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #FFFFFF;
+}
+
+.ny-brand-logo-text {
+  font-family: var(--ny-font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.ny-brand-logo-text .ny-part-nye {
+  color: #FFFFFF;
+}
+
+.ny-brand-logo-text .ny-part-ga {
+  color: var(--ny-secondary);
+}
+
+.ny-brand-tagline {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  display: none;
+}
+
+@media (min-width: 576px) {
+  .ny-brand-tagline {
+    display: inline-block;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    padding-left: 12px;
+    margin-left: 12px;
+  }
+}
+
+/* Header User Profile & Action */
+.ny-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ny-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 6px 14px;
+  border-radius: var(--ny-radius-full);
+  font-size: 13px;
+  color: #FFFFFF;
+}
+
+.ny-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ny-secondary);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.ny-btn-logout {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: var(--ny-radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--ny-transition);
+}
+
+.ny-btn-logout:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  border-color: #FFFFFF;
+}
+
+/* Desktop Navigation Links */
+.ny-desktop-nav {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .ny-desktop-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ny-desktop-nav .ny-nav-item {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--ny-radius-sm);
+    transition: var(--ny-transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .ny-desktop-nav .ny-nav-item:hover,
+  .ny-desktop-nav .ny-nav-item.active {
+    background: rgba(255, 255, 255, 0.16);
+    color: #FFFFFF;
+  }
+
+  .ny-desktop-nav .ny-nav-item.active {
+    background: var(--ny-secondary);
+    color: #FFFFFF;
+  }
+}
+
+/* ==========================================================
+   MOBILE BOTTOM NAVIGATION BAR (Flutter-style)
+   ========================================================== */
+.ny-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: #FFFFFF;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 1000;
+  border-top: 1px solid var(--ny-outline);
+}
+
+@media (min-width: 992px) {
+  .ny-bottom-nav {
+    display: none; /* Cache sur grand écran car navigation supérieure active */
+  }
+}
+
+.ny-bottom-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+  color: var(--ny-on-surface-variant);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--ny-transition);
+}
+
+.ny-bottom-tab i {
+  font-size: 18px;
+  margin-bottom: 4px;
+  transition: var(--ny-transition);
+}
+
+.ny-bottom-tab:hover,
+.ny-bottom-tab.active {
+  color: var(--ny-primary);
+}
+
+.ny-bottom-tab.active i {
+  transform: scale(1.15);
+  color: var(--ny-primary);
+}
+
+/* Bouton central flottant (+) pour ajout rapide */
+.ny-bottom-tab.ny-tab-add {
+  position: relative;
+}
+
+.ny-bottom-tab.ny-tab-add .ny-add-icon-bubble {
+  width: 44px;
+  height: 44px;
+  background: var(--ny-primary);
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(0, 45, 122, 0.35);
+  margin-top: -16px;
+  transition: var(--ny-transition);
+}
+
+.ny-bottom-tab.ny-tab-add.active .ny-add-icon-bubble,
+.ny-bottom-tab.ny-tab-add:hover .ny-add-icon-bubble {
+  background: var(--ny-secondary);
+  transform: scale(1.08);
+}
+
+/* ==========================================================
+   SCREENS (Pages / Views)
+   ========================================================== */
+.ny-screen {
+  display: none;
+  animation: nyFadeIn 0.25s ease-out;
+}
+
+.ny-screen.active {
+  display: block;
+}
+
+@keyframes nyFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================
+   CARDS & CONTAINERS (Reusing VaultEdge card aesthetics)
+   ========================================================== */
+.ny-card {
+  background: var(--ny-surface);
+  border-radius: var(--ny-radius);
+  border: 1px solid var(--ny-outline);
+  box-shadow: var(--ny-shadow-sm);
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: var(--ny-transition);
+}
+
+.ny-card:hover {
+  box-shadow: var(--ny-shadow);
+}
+
+.ny-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ny-outline);
+}
+
+.ny-card-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ny-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ==========================================================
+   HERO / MAIN BUDGET CARD (ACCUEIL)
+   ========================================================== */
+.ny-budget-hero-card {
+  background: linear-gradient(135deg, var(--ny-primary) 0%, #001B49 100%);
+  color: #FFFFFF;
+  border-radius: var(--ny-radius-lg);
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--ny-shadow);
+  margin-bottom: 24px;
+  border: none;
+}
+
+.ny-budget-hero-card::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(251, 180, 24, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ny-budget-hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ny-budget-hero-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.ny-budget-remaining-amount {
+  font-size: 40px;
+  font-family: var(--ny-font-heading);
+  font-weight: 900;
+  line-height: 1;
+  color: #FFFFFF;
+}
+
+@media (min-width: 576px) {
+  .ny-budget-remaining-amount {
+    font-size: 48px;
+  }
+}
+
+/* Status Indicator Pill */
+.ny-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--ny-radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* Vert d'état sémantique (distinct du vert de marque #10B982) */
+.ny-status-pill.status-green {
+  background: var(--ny-status-ok-bg);
+  color: var(--ny-status-ok);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+}
+
+.ny-status-pill.status-orange {
+  background: var(--ny-status-warning-bg);
+  color: var(--ny-status-warning);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.ny-status-pill.status-red {
+  background: var(--ny-status-danger-bg);
+  color: var(--ny-status-danger);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+/* Barre de progression budget */
+.ny-progress-wrap {
+  margin: 20px 0 16px 0;
+}
+
+.ny-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 8px;
+}
+
+.ny-progress-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: var(--ny-radius-full);
+  overflow: hidden;
+}
+
+.ny-progress-bar-fill {
+  height: 100%;
+  border-radius: var(--ny-radius-full);
+  transition: width 0.6s ease;
+}
+
+.ny-progress-bar-fill.fill-green {
+  background: var(--ny-status-ok);
+}
+
+.ny-progress-bar-fill.fill-orange {
+  background: var(--ny-status-warning);
+}
+
+.ny-progress-bar-fill.fill-red {
+  background: var(--ny-status-danger);
+}
+
+/* Daily Budget recommendation Card */
+.ny-daily-card {
+  background: #FFFFFF;
+  border-radius: var(--ny-radius);
+  padding: 20px;
+  border-left: 6px solid var(--ny-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  box-shadow: var(--ny-shadow-sm);
+}
+
+.ny-daily-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ny-daily-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--ny-secondary-container);
+  color: var(--ny-on-secondary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.ny-daily-title {
+  font-size: 13px;
+  color: var(--ny-on-surface-variant);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.ny-daily-amount {
+  font-size: 26px;
+  font-family: var(--ny-font-heading);
+  font-weight: 900;
+  color: var(--ny-primary);
+}
+
+.ny-daily-right {
+  text-align: right;
+  font-size: 13px;
+  color: var(--ny-text-muted);
+}
+
+/* Quick summary row */
+.ny-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ny-stat-box {
+  background: #FFFFFF;
+  border-radius: var(--ny-radius);
+  border: 1px solid var(--ny-outline);
+  padding: 16px;
+  box-shadow: var(--ny-shadow-sm);
+}
+
+.ny-stat-box-label {
+  font-size: 12px;
+  color: var(--ny-on-surface-variant);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.ny-stat-box-value {
+  font-size: 20px;
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  color: var(--ny-primary);
+}
+
+/* ==========================================================
+   BUTTONS
+   ========================================================== */
+.ny-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--ny-radius-sm);
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.ny-btn-primary {
+  background-color: var(--ny-primary);
+  color: var(--ny-on-primary);
+}
+
+.ny-btn-primary:hover {
+  background-color: var(--ny-primary-hover);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(0, 45, 122, 0.3);
+  transform: translateY(-1px);
+}
+
+.ny-btn-secondary {
+  background-color: var(--ny-secondary);
+  color: var(--ny-on-secondary);
+}
+
+.ny-btn-secondary:hover {
+  background-color: var(--ny-secondary-hover);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(16, 185, 130, 0.35);
+  transform: translateY(-1px);
+}
+
+.ny-btn-tertiary {
+  background-color: var(--ny-tertiary);
+  color: var(--ny-on-tertiary); /* Contrôle WCAG AAA */
+}
+
+.ny-btn-tertiary:hover {
+  background-color: var(--ny-tertiary-hover);
+  color: var(--ny-on-tertiary);
+  transform: translateY(-1px);
+}
+
+.ny-btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--ny-primary);
+  color: var(--ny-primary);
+}
+
+.ny-btn-outline:hover {
+  background-color: var(--ny-primary-container);
+  color: var(--ny-primary);
+}
+
+.ny-btn-danger {
+  background-color: var(--ny-danger);
+  color: var(--ny-on-danger);
+}
+
+.ny-btn-danger:hover {
+  background-color: #B91C1C;
+  color: #FFFFFF;
+}
+
+.ny-btn-block {
+  display: flex;
+  width: 100%;
+}
+
+.ny-btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: var(--ny-radius-sm);
+}
+
+/* ==========================================================
+   FORM CONTROLS & INPUTS
+   ========================================================== */
+.ny-form-group {
+  margin-bottom: 20px;
+}
+
+.ny-form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ny-primary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ny-form-control {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-family: var(--ny-font-body);
+  color: var(--ny-on-surface);
+  background-color: #FFFFFF;
+  border: 2px solid var(--ny-outline);
+  border-radius: var(--ny-radius-sm);
+  outline: none;
+  transition: var(--ny-transition);
+}
+
+.ny-form-control:focus {
+  border-color: var(--ny-primary);
+  box-shadow: 0 0 0 3px rgba(0, 45, 122, 0.12);
+}
+
+.ny-input-amount {
+  font-size: 32px;
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  text-align: center;
+  color: var(--ny-primary);
+  padding: 16px;
+}
+
+/* Quick Amount Pills */
+.ny-quick-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.ny-quick-chip {
+  flex: 1;
+  min-width: 60px;
+  padding: 10px 12px;
+  background: var(--ny-surface-variant);
+  border: 1px solid var(--ny-outline);
+  border-radius: var(--ny-radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ny-primary);
+  text-align: center;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  user-select: none;
+}
+
+.ny-quick-chip:hover {
+  background: var(--ny-primary-container);
+  border-color: var(--ny-primary);
+  transform: translateY(-2px);
+}
+
+.ny-quick-chip.selected {
+  background: var(--ny-primary);
+  color: #FFFFFF;
+  border-color: var(--ny-primary);
+}
+
+/* Category Selector Grid & Auto-categorization Pill */
+.ny-auto-category-box {
+  background: var(--ny-surface-variant);
+  border: 1px dashed var(--ny-outline-variant);
+  border-radius: var(--ny-radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.ny-auto-category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--ny-radius-full);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.ny-auto-category-pill:hover {
+  transform: scale(1.03);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.ny-auto-category-pill.pulse {
+  animation: nyPulse 1.4s infinite;
+}
+
+@keyframes nyPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.ny-pill-source-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  margin-left: 4px;
+}
+
+/* 1-Tap Category Bottom Sheet / Popover */
+.ny-1tap-popover {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 27, 73, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 2500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 576px) {
+  .ny-1tap-popover {
+    align-items: center;
+  }
+}
+
+.ny-1tap-content {
+  background: #FFFFFF;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+  box-shadow: var(--ny-shadow-lg);
+  animation: nySlideUp 0.25s ease-out;
+}
+
+@media (min-width: 576px) {
+  .ny-1tap-content {
+    border-radius: var(--ny-radius-lg);
+  }
+}
+
+@keyframes nySlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.ny-1tap-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ny-1tap-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: var(--ny-radius);
+  border: 1px solid var(--ny-outline);
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  text-align: left;
+}
+
+.ny-1tap-item:hover,
+.ny-1tap-item:active {
+  background: var(--ny-surface-variant);
+  border-color: var(--ny-primary);
+  transform: translateX(4px);
+}
+
+.ny-1tap-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ny-1tap-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ny-primary);
+}
+
+/* Category Selector Grid */
+.ny-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ny-category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 10px;
+  background: #FFFFFF;
+  border: 2px solid var(--ny-outline);
+  border-radius: var(--ny-radius);
+  cursor: pointer;
+  transition: var(--ny-transition);
+  text-align: center;
+}
+
+.ny-category-item:hover {
+  border-color: var(--ny-secondary);
+  background: var(--ny-secondary-container);
+}
+
+.ny-category-item.selected {
+  border-color: var(--ny-primary);
+  background: var(--ny-primary-container);
+  box-shadow: 0 4px 12px rgba(0, 45, 122, 0.15);
+}
+
+.ny-cat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ny-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: var(--ny-primary);
+}
+
+.ny-category-item.selected .ny-cat-icon {
+  background: var(--ny-primary);
+  color: #FFFFFF;
+}
+
+.ny-cat-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ny-on-surface);
+}
+
+/* ==========================================================
+   EXPENSE LIST & HISTORY ITEMS
+   ========================================================== */
+.ny-history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ny-filter-select {
+  flex: 1;
+  min-width: 150px;
+}
+
+.ny-expense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ny-expense-item {
+  background: #FFFFFF;
+  border: 1px solid var(--ny-outline);
+  border-radius: var(--ny-radius);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: var(--ny-transition);
+}
+
+.ny-expense-item:hover {
+  box-shadow: var(--ny-shadow-sm);
+  border-color: var(--ny-primary);
+}
+
+.ny-expense-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ny-expense-cat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ny-expense-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ny-on-surface);
+  margin-bottom: 2px;
+}
+
+.ny-expense-meta {
+  font-size: 12px;
+  color: var(--ny-on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ny-expense-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ny-expense-amount {
+  font-size: 17px;
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  color: var(--ny-danger);
+}
+
+.ny-expense-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ny-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ny-radius-sm);
+  border: 1px solid var(--ny-outline);
+  background: #FFFFFF;
+  color: var(--ny-on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  font-size: 13px;
+}
+
+.ny-icon-btn:hover {
+  background: var(--ny-surface-variant);
+  color: var(--ny-primary);
+  border-color: var(--ny-primary);
+}
+
+.ny-icon-btn.btn-delete:hover {
+  background: var(--ny-danger-container);
+  color: var(--ny-danger);
+  border-color: var(--ny-danger);
+}
+
+/* ==========================================================
+   ANALYTICS SCREEN
+   ========================================================== */
+.ny-chart-wrapper {
+  position: relative;
+  height: 280px;
+  margin: 20px 0;
+}
+
+.ny-analytics-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ny-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ny-breakdown-table th {
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--ny-on-surface-variant);
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--ny-outline);
+}
+
+.ny-breakdown-table td {
+  padding: 12px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--ny-outline);
+}
+
+/* ==========================================================
+   AUTH SCREEN (Login & Register - with NyeGa Logo)
+   ========================================================== */
+.ny-auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: linear-gradient(135deg, #F0F4FA 0%, #FFFFFF 100%);
+}
+
+.ny-auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: #FFFFFF;
+  border-radius: var(--ny-radius-lg);
+  box-shadow: var(--ny-shadow-lg);
+  padding: 36px 30px;
+  border: 1px solid var(--ny-outline);
+  text-align: center;
+}
+
+.ny-auth-logo-wrap {
+  margin-bottom: 20px;
+}
+
+.ny-auth-logo-img {
+  max-width: 190px;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+}
+
+.ny-auth-subtitle {
+  font-size: 14px;
+  color: var(--ny-on-surface-variant);
+  margin-bottom: 24px;
+}
+
+.ny-auth-tabs {
+  display: flex;
+  background: var(--ny-surface-variant);
+  border-radius: var(--ny-radius-sm);
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.ny-auth-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--ny-radius-sm);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ny-on-surface-variant);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: var(--ny-transition);
+}
+
+.ny-auth-tab.active {
+  background: #FFFFFF;
+  color: var(--ny-primary);
+  box-shadow: var(--ny-shadow-sm);
+}
+
+/* ==========================================================
+   ALERTS, TOASTS & MODAL
+   ========================================================== */
+.ny-alert {
+  padding: 12px 16px;
+  border-radius: var(--ny-radius-sm);
+  font-size: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ny-alert-danger {
+  background-color: var(--ny-danger-container);
+  color: var(--ny-on-danger-container);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.ny-alert-success {
+  background-color: var(--ny-secondary-container);
+  color: var(--ny-on-secondary-container);
+  border: 1px solid rgba(16, 185, 130, 0.2);
+}
+
+.ny-alert-warning {
+  background-color: var(--ny-tertiary-container);
+  color: var(--ny-on-tertiary-container);
+  border: 1px solid rgba(251, 180, 24, 0.3);
+}
+
+.ny-toast {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ny-primary);
+  color: #FFFFFF;
+  padding: 12px 24px;
+  border-radius: var(--ny-radius-full);
+  box-shadow: var(--ny-shadow-floating);
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 9999;
+  display: none;
+  animation: nyFadeIn 0.3s ease;
+}
+
+/* Modal */
+.ny-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 27, 73, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.ny-modal-box {
+  background: #FFFFFF;
+  border-radius: var(--ny-radius-lg);
+  max-width: 500px;
+  width: 100%;
+  padding: 28px;
+  box-shadow: var(--ny-shadow-lg);
+}
+
+.ny-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ny-on-surface-variant);
+}
+
+.ny-empty-state i {
+  font-size: 48px;
+  color: var(--ny-outline-variant);
+  margin-bottom: 14px;
+}

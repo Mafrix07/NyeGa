@@ -1,0 +1,133 @@
+/**
+ * NYEGA DESIGN SYSTEM - Centralized Theme Tokens
+ * Generated from NyeGa Logo Analysis & WCAG AA/AAA Contrast Compliance
+ * Compatible with Flutter ColorScheme specifications
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap");
+
+:root {
+  /* ==========================================================
+     BRAND IDENTITY (Extracted directly from NyeGa Logo)
+     ========================================================== */
+  /* Primary: Bleu Marine (Texte "Nye" & Capuchon étudiant) */
+  --ny-primary: #002D7A;
+  --ny-on-primary: #FFFFFF;
+  --ny-primary-hover: #001F56;
+  --ny-primary-container: #EBF2FF;
+  --ny-on-primary-container: #001A4D;
+
+  /* Secondary / Accent: Vert Teal (Texte "Ga" & Feuille de croissance) */
+  --ny-secondary: #10B982;
+  --ny-on-secondary: #FFFFFF;
+  --ny-secondary-hover: #059669;
+  --ny-secondary-container: #D1FAE5;
+  --ny-on-secondary-container: #064E3B;
+
+  /* Tertiary: Doré / Jaune (Croissant dynamique & Gland du capuchon) */
+  --ny-tertiary: #FBB418;
+  --ny-on-tertiary: #002D7A; /* Note: Utilise le bleu marine pour assurer un contraste WCAG AAA (7.03:1) */
+  --ny-tertiary-hover: #E5A110;
+  --ny-tertiary-container: #FEF3C7;
+  --ny-on-tertiary-container: #78350F;
+
+  /* Danger / Alerte critique: Rouge standard (WCAG AA conforme) */
+  --ny-danger: #DC2626;
+  --ny-on-danger: #FFFFFF;
+  --ny-danger-container: #FEE2E2;
+  --ny-on-danger-container: #7F1D1D;
+
+  /* ==========================================================
+     NEUTRAL SURFACES & BACKGROUNDS
+     ========================================================== */
+  --ny-background: #F8FAFC;         /* Fond principal très clair bleuté/ardoise */
+  --ny-on-background: #0F172A;      /* Texte principal foncé */
+  --ny-surface: #FFFFFF;            /* Cartes et conteneurs blancs */
+  --ny-surface-variant: #F1F5F9;    /* Arrière-plan secondaire de bloc */
+  --ny-surface-tinted: #F0F4FA;     /* Surface légèrement teintée bleu marine */
+  --ny-on-surface: #0F172A;         /* Texte sur surface blanche */
+  --ny-on-surface-variant: #475569; /* Texte secondaire / sous-titres (WCAG AAA 7.58:1) */
+  --ny-text-muted: #64748B;         /* Métadonnées discrètes (WCAG AA 4.76:1) */
+
+  /* Bordures et contours */
+  --ny-outline: #E2E8F0;
+  --ny-outline-variant: #CBD5E1;
+
+  /* ==========================================================
+     STATUTS BUDGÉTAIRES (Vert distinct de la marque #10B982)
+     ========================================================== */
+  --ny-status-ok: #16A34A;          /* Vert d'état sémantique distinct du vert de marque */
+  --ny-on-status-ok: #FFFFFF;
+  --ny-status-ok-bg: #DCFCE7;
+  --ny-status-warning: #D97706;     /* Orange d'état sémantique */
+  --ny-on-status-warning: #FFFFFF;
+  --ny-status-warning-bg: #FEF3C7;
+  --ny-status-danger: #DC2626;      /* Rouge critique sémantique */
+  --ny-on-status-danger: #FFFFFF;
+  --ny-status-danger-bg: #FEE2E2;
+
+  /* ==========================================================
+     TYPOGRAPHIE & FORMES (Conservées du template VaultEdge)
+     ========================================================== */
+  --ny-font-heading: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ny-font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --ny-radius-sm: 6px;
+  --ny-radius: 12px;
+  --ny-radius-lg: 16px;
+  --ny-radius-full: 9999px;
+
+  --ny-shadow-sm: 0 2px 8px rgba(0, 45, 122, 0.06);
+  --ny-shadow: 0 8px 30px rgba(0, 45, 122, 0.08);
+  --ny-shadow-lg: 0 16px 40px rgba(0, 45, 122, 0.12);
+  --ny-shadow-floating: 0 10px 25px -5px rgba(0, 45, 122, 0.25);
+
+  --ny-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ==========================================================
+     RÉTRO-COMPATIBILITÉ AVEC LES CLASSES VAULTEDGE
+     ========================================================== */
+  --ve-dark: var(--ny-primary);
+  --ve-dark2: #001B49;
+  --ve-navy: #00225E;
+  --ve-gold: var(--ny-secondary);
+  --ve-gold2: #059669;
+  --ve-accent: var(--ny-tertiary);
+  --ve-light: var(--ny-background);
+  --ve-white: var(--ny-surface);
+  --ve-text: var(--ny-on-surface-variant);
+  --ve-border: var(--ny-outline);
+  --ve-radius: var(--ny-radius);
+  --ve-shadow: var(--ny-shadow);
+  --ve-trans: var(--ny-transition);
+}
+
+/* ==========================================================
+   GLOBAL BASE RESETS
+   ========================================================== */
+body {
+  font-family: var(--ny-font-body);
+  background-color: var(--ny-background);
+  color: var(--ny-on-surface);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--ny-font-heading);
+  color: var(--ny-primary);
+  font-weight: 800;
+  margin-top: 0;
+}
+
+a {
+  color: var(--ny-primary);
+  transition: var(--ny-transition);
+}
+
+a:hover {
+  color: var(--ny-secondary);
+  text-decoration: none;
+}

@@ -1,0 +1,96 @@
+# Contexte
+
+Je développe Nyega, une application de gestion de budget pour étudiants.
+La cible finale est une application mobile Flutter + Supabase, mais en
+attendant que le développement Flutter soit fait, je veux une VRAIE
+APPLICATION WEB fonctionnelle, utilisable dès maintenant.
+
+⚠️ IMPORTANT : je ne veux PAS un prototype, une maquette statique ou une
+démo avec de fausses données. Je veux une application web réelle : code
+propre, structuré, navigation fonctionnelle entre les écrans, formulaires
+qui marchent, données persistées dans Supabase, gestion des erreurs et des
+états de chargement.
+
+# Fichiers à utiliser
+
+- Template : "C:\Users\DELL\Documents\NyeGa\vaultedge-1.0.0"
+  → Tu dois t'appuyer sur le template présent dans ce dossier comme base
+  du projet : réutilise sa structure, ses composants, ses écrans, sa
+  typographie, ses espacements et ses rayons de bordure. Ne repars pas de
+  zéro et ne réécris pas un autre design à côté. Lis d'abord le contenu du
+  dossier, identifie sa stack technique et conserve-la.
+- Logo : "C:\Users\DELL\Documents\NyeGa\Logos"
+
+# Étape 1 — Extraction de la palette
+
+Analyse le logo et extrais les codes hexadécimaux exacts de :
+- Bleu marine (capuchon et texte "Nye")
+- Vert/teal (feuille et texte "Ga")
+- Doré/jaune (croissant en bas du logo)
+Propose aussi un fond neutre (blanc ou gris très clair) et une couleur de
+texte secondaire (gris foncé) qui s'harmonisent avec la palette.
+
+# Étape 2 — Adaptation du template
+
+Remplace entièrement le code couleur du template par cette palette :
+- Primaire (boutons, actions principales, éléments actifs) → bleu marine
+- Secondaire/accent (succès, validation, éléments positifs) → vert/teal
+- Tertiaire (mise en avant, éléments décoratifs, alertes douces) → doré
+- Danger/alerte critique → rouge standard (pas de doré pour ça, pour ne
+  pas nuire à la lisibilité des signaux d'alerte)
+
+Centralise toutes les couleurs à un seul endroit (variables CSS / fichier
+de thème / design tokens selon la stack du template). Aucune couleur codée
+en dur dans les écrans. Nomme les tokens de façon sémantique (primary,
+secondary, tertiary, danger, surface, onSurface…) pour que je puisse les
+reporter facilement dans un ColorScheme Flutter plus tard.
+
+# Étape 3 — Écrans à produire (tous fonctionnels)
+
+1. Connexion / inscription : authentification réelle via Supabase Auth
+   (email + mot de passe), validation des champs, messages d'erreur clairs.
+2. Accueil : budget disponible, budget journalier recommandé (calculé),
+   indicateur de statut vert / orange / rouge. Le vert de statut "normal"
+   doit être légèrement distinct du vert de la marque.
+3. Ajout rapide de dépense : boutons de montants rapides, saisie libre,
+   sélection de catégorie, enregistrement en base.
+4. Historique des dépenses : liste depuis la base, tri par date, filtre par
+   catégorie, suppression/modification d'une dépense.
+5. Analyse : répartition par catégorie avec un vrai graphique alimenté par
+   les données de l'utilisateur.
+6. Modification du budget : formulaire qui met à jour le budget en base et
+   recalcule immédiatement l'accueil.
+
+# Backend Supabase
+
+- Fournis le schéma SQL (tables profiles, budgets, categories, expenses…).
+- Active la Row Level Security : chaque utilisateur ne voit que ses données.
+- Prévois un fichier .env.example pour les clés (URL et anon key), sans
+  jamais coder de clé en dur.
+- Inclus quelques catégories par défaut adaptées aux étudiants (transport,
+  alimentation, logement, loisirs, etc.).
+
+# Contraintes
+
+- Interface pensée mobile-first (elle doit ressembler à l'app mobile future)
+  mais responsive sur ordinateur.
+- Contraste texte/fond conforme WCAG AA minimum (4.5:1 pour le texte normal,
+  3:1 pour le grand texte et les éléments d'interface). Vérifie chaque
+  combinaison de couleurs et ajuste légèrement si une ne passe pas.
+- Le logo apparaît UNIQUEMENT sur l'écran de connexion/inscription.
+- Seule la palette change : garde la typographie, les espacements et les
+  rayons du template.
+- Ne mélange pas plusieurs approches : un seul code cohérent, commenté aux
+  endroits importants.
+
+# Livrable attendu
+
+1. Le projet web complet et prêt à lancer (arborescence de fichiers + code
+   de chaque fichier), basé sur le template du dossier.
+2. La palette extraite avec les 3 codes hex du logo + le tableau de
+   vérification des contrastes WCAG.
+3. Le fichier de thème centralisé.
+4. Le schéma SQL Supabase avec les politiques RLS.
+5. Un README avec les commandes d'installation et de lancement.
+6. Bonus : un fichier theme.dart (ColorScheme Flutter) reprenant la même
+   palette, pour la future version mobile.
