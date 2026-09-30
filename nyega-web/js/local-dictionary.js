@@ -12,7 +12,7 @@
  * 7. Autres
  */
 
-(function(window) {
+(function(root) {
   'use strict';
 
   // Dictionnaire de termes togolais et de la vie étudiante
@@ -171,8 +171,138 @@
     return null;
   }
 
-  window.LOCAL_DICTIONARY = LOCAL_DICTIONARY;
-  window.normalizeText = normalizeText;
-  window.resolveCategoryLocal = resolveCategoryLocal;
+  // Liste des mots vides français, verbes génériques et conjonctions
+  const FRENCH_STOP_WORDS = new Set([
+    'pour', 'chez', 'avec', 'sans', 'dans', 'sur', 'sous', 'vers', 'par',
+    'de', 'des', 'du', 'd', 'le', 'la', 'les', 'l',
+    'un', 'une', 'au', 'aux', 'a',
+    'et', 'ou', 'ni', 'mais', 'donc', 'or', 'car',
+    'ce', 'cet', 'cette', 'ces',
+    'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses',
+    'notre', 'nos', 'votre', 'vos', 'leur', 'leurs',
+    'qui', 'que', 'quoi', 'dont', 'ou', 'y', 'en', 'se', 'sa', 'lui',
+    'moi', 'toi', 'soi', 'nous', 'vous', 'eux', 'ceci', 'cela', 'ca',
+    // Verbes et auxiliaires génériques
+    'aller', 'payer', 'achat', 'acheter', 'achete', 'achetee', 'faire', 'fait',
+    'pris', 'prendre', 'donner', 'donne', 'voir', 'vu', 'mettre', 'mis',
+    'venir', 'venu', 'trouver', 'partir', 'sortir', 'passer', 'passe',
+    'est', 'sont', 'ete', 'avoir', 'ai', 'as', 'avons', 'avez', 'ont',
+    'suis', 'es', 'sommes', 'etes', 'etais', 'etait', 'fais', 'faisait',
+    'cout', 'coute', 'couter'
+  ]);
 
-})(window);
+  // Adjectifs qualificatifs et termes qualificatifs à pénaliser/exclure (préfère les noms, pas la longueur)
+  const FRENCH_ADJECTIVES = new Set([
+    'grand', 'grande', 'grands', 'grandes',
+    'petit', 'petite', 'petits', 'petites',
+    'gros', 'grosse', 'grosses',
+    'beau', 'belle', 'beaux', 'belles',
+    'joli', 'jolie', 'jolis', 'jolies',
+    'bon', 'bonne', 'bons', 'bonnes',
+    'mauvais', 'mauvaise', 'mauvaises',
+    'nouveau', 'nouvelle', 'nouveaux', 'nouvelles',
+    'neuf', 'neuve', 'neufs', 'neuves',
+    'vieux', 'vieille', 'vieilles',
+    'jeune', 'jeunes',
+    'vrai', 'vraie', 'faux', 'fausse',
+    'cher', 'chere', 'chers', 'cheres',
+    'superbe', 'superbes', 'magnifique', 'magnifiques',
+    'excellent', 'excellente', 'excellents', 'excellentes',
+    'extraordinaire', 'extraordinaires',
+    'rapide', 'rapides', 'simple', 'simples', 'double', 'doubles',
+    'chaud', 'chaude', 'froid', 'froide',
+    'propre', 'sale', 'facile', 'difficile',
+    'premier', 'premiere', 'dernier', 'derniere',
+    'autre', 'autres', 'meme', 'memes',
+    'bleu', 'bleue', 'blanc', 'blanche', 'noir', 'noire', 'rouge', 'vert', 'verte', 'jaune',
+    'tout', 'tous', 'toute', 'toutes', 'chaque', 'plusieurs', 'quelque', 'quelques'
+  ]);
+
+  /**
+   * Algorithme d'extraction du mot-clé significatif :
+   * 1. Expressions composées du dictionnaire togolais (ex: "lait de corps", "pass internet", "resto u")
+   * 2. Mots simples du dictionnaire togolais (ex: "zem", "ayimolou", "pate", "taxi", "biere")
+   * 3. Mots hors dictionnaire : sélectionne le premier nom réel (l'objet acheté)
+   *    en éliminant les stop words, nombres et adjectifs qualificatifs (préfère les noms, PAS la longueur).
+   */
+  function extractMainKeyword(description, dictionary = LOCAL_DICTIONARY) {
+    if (!description) return '';
+    const clean = normalizeText(description);
+    if (!clean) return '';
+
+    // 1. Priorité 1 : Expressions multi-mots du dictionnaire local (ex: "lait de corps", "pass internet", "resto u")
+    if (dictionary) {
+      const multiWordEntries = [];
+      for (const keywords of Object.values(dictionary)) {
+        for (const kw of keywords) {
+          const cleanKw = normalizeText(kw);
+          if (cleanKw.includes(' ')) {
+            multiWordEntries.push(cleanKw);
+          }
+        }
+      }
+      multiWordEntries.sort((a, b) => b.length - a.length);
+
+      for (const phrase of multiWordEntries) {
+        const regex = new RegExp(`(^|\\s)${phrase}(\\s|$)`);
+        if (regex.test(clean)) {
+          return phrase;
+        }
+      }
+    }
+
+    // 2. Priorité 2 : Mots simples du dictionnaire togolais
+    const allWords = clean.split(' ').filter(Boolean);
+    if (dictionary) {
+      const dictWords = new Set();
+      for (const keywords of Object.values(dictionary)) {
+        for (const kw of keywords) {
+          const cleanKw = normalizeText(kw);
+          if (!cleanKw.includes(' ')) {
+            dictWords.add(cleanKw);
+          }
+        }
+      }
+
+      for (const word of allWords) {
+        if (dictWords.has(word)) {
+          return word;
+        }
+      }
+    }
+
+    // 3. Priorité 3 : Hors dictionnaire -> premier nom réel (pas l'adjectif ni le plus long)
+    const candidateNouns = allWords.filter(w => {
+      if (w.length <= 1) return false;
+      if (FRENCH_STOP_WORDS.has(w)) return false;
+      if (/^\d+$/.test(w)) return false;
+      if (FRENCH_ADJECTIVES.has(w)) return false;
+      return true;
+    });
+
+    if (candidateNouns.length > 0) {
+      return candidateNouns[0];
+    }
+
+    const fallback = allWords.filter(w => !FRENCH_STOP_WORDS.has(w) && !/^\d+$/.test(w));
+    return fallback[0] || allWords[0] || clean;
+  }
+
+  root.LOCAL_DICTIONARY = LOCAL_DICTIONARY;
+  root.normalizeText = normalizeText;
+  root.resolveCategoryLocal = resolveCategoryLocal;
+  root.extractMainKeyword = extractMainKeyword;
+  root.FRENCH_STOP_WORDS = FRENCH_STOP_WORDS;
+  root.FRENCH_ADJECTIVES = FRENCH_ADJECTIVES;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      LOCAL_DICTIONARY,
+      normalizeText,
+      resolveCategoryLocal,
+      extractMainKeyword,
+      FRENCH_STOP_WORDS,
+      FRENCH_ADJECTIVES
+    };
+  }
+})(typeof window !== 'undefined' ? window : global);

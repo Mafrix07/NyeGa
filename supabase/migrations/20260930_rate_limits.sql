@@ -18,20 +18,17 @@ COMMENT ON TABLE public.rate_limits IS 'Compteur de requêtes IA (30 req/h) par 
 -- 2. ACTIVATION DE ROW LEVEL SECURITY (RLS)
 ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
 
--- 3. POLITIQUES RLS : Aucun accès INSERT / UPDATE / DELETE direct côté client
--- Supprimer d'anciennes politiques si elles existent
+-- 3. POLITIQUES RLS : RLS activée, AUCUN accès direct côté client (ni lecture ni écriture)
+-- Supprimer toutes les politiques utilisateurs directes
 DROP POLICY IF EXISTS "Les étudiants créent leur propre rate limit" ON public.rate_limits;
 DROP POLICY IF EXISTS "Les étudiants mettent à jour leur propre rate limit" ON public.rate_limits;
 DROP POLICY IF EXISTS "Les étudiants suppriment leur rate limit" ON public.rate_limits;
 DROP POLICY IF EXISTS "Les étudiants gèrent leur rate limit" ON public.rate_limits;
+DROP POLICY IF EXISTS "Les étudiants lisent leur propre rate limit" ON public.rate_limits;
 
--- Seule la lecture de son propre statut peut être autorisée en RLS (facultatif)
-CREATE POLICY "Les étudiants lisent leur propre rate limit"
-    ON public.rate_limits FOR SELECT
-    USING (auth.uid() = user_id);
-
--- Révoquer explicitement tout droit d'écriture direct sur la table pour anon et authenticated
-REVOKE INSERT, UPDATE, DELETE ON public.rate_limits FROM anon, authenticated;
+-- Révoquer explicitement tout accès direct (SELECT, INSERT, UPDATE, DELETE) pour anon et authenticated
+REVOKE ALL ON public.rate_limits FROM anon, authenticated;
+GRANT ALL ON public.rate_limits TO service_role;
 
 -- 4. FONCTION SQL D'INCRÉMENTATION ATOMIQUE AVEC ROW-LOCK
 CREATE OR REPLACE FUNCTION public.check_and_increment_rate_limit(
@@ -82,3 +79,6 @@ BEGIN
     RETURN jsonb_build_object('limited', FALSE, 'count', v_count, 'reset_at', v_record.reset_at);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE EXECUTE ON FUNCTION public.check_and_increment_rate_limit(UUID, INT, INTERVAL) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.check_and_increment_rate_limit(UUID, INT, INTERVAL) TO service_role;

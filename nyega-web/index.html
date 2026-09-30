@@ -7,6 +7,11 @@
   <meta name="description" content="NyeGa - L'application web mobile-first de gestion de budget pour étudiants togolais. Catégorisation automatique et devises FCFA.">
   <link rel="icon" href="img/favicon.ico">
 
+  <!-- Security Headers & Defense-in-depth -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://*.supabase.co; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
   <!-- Frameworks & Design Tokens -->
   <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/font-awesome.min.css">
@@ -62,11 +67,11 @@
   <!-- Notification Toast flottant -->
   <div id="nyegaToast" class="ny-toast">Notification</div>
 
-  <!-- BANNIÈRE INDICATRICE DU MODE DE PERSISTANCE -->
+  <!-- BANNIÈRE INDICATRICE (Mode développement uniquement) -->
   <div id="connectionBanner" class="bg-warning text-dark py-1 px-3 text-center small font-weight-bold" style="display:none;">
     <i class="fa fa-info-circle mr-1"></i>
-    <span id="bannerText">Mode local actif (FCFA). Connectez Supabase pour persister en ligne et activer l'IA.</span>
-    <button class="btn btn-sm btn-outline-dark py-0 px-2 ml-2" onclick="openConfigModal()">Configurer Supabase</button>
+    <span id="bannerText">Mode développement actif (FCFA).</span>
+    <button id="btnConfigSupabase" class="btn btn-sm btn-outline-dark py-0 px-2 ml-2" onclick="openConfigModal()">Configurer Supabase</button>
   </div>
 
   <!-- ==========================================================
@@ -230,7 +235,12 @@
       <div class="ny-card">
         <div class="ny-card-header">
           <h2 class="ny-card-title"><i class="fa fa-history"></i> Historique des Dépenses</h2>
-          <span class="badge badge-light border" id="historyCountBadge">0 dépense</span>
+          <div class="d-flex align-items-center" style="gap:8px;">
+            <button type="button" class="btn btn-sm btn-outline-secondary" title="Exporter toutes mes dépenses au format CSV" onclick="exportExpensesCSV()">
+              <i class="fa fa-download mr-1"></i> Exporter CSV
+            </button>
+            <span class="badge badge-light border" id="historyCountBadge">0 dépense</span>
+          </div>
         </div>
 
         <!-- Filtres et Tri -->
@@ -361,6 +371,24 @@
           Anticipez vos recharges de <strong>connexion internet</strong> et vos trajets en <strong>zem</strong> en début de semaine pour ne pas être pris au dépourvu !
         </p>
       </div>
+
+      <!-- Gestion du compte & Données Personnelles (Conforme Loi 2019-014 Togo) -->
+      <div class="ny-card" style="border: 1px solid #FECACA; background: #FFF5F5;">
+        <h5 class="font-weight-bold text-danger mb-2">
+          <i class="fa fa-shield mr-1"></i> Données Personnelles & Compte
+        </h5>
+        <p class="small text-muted mb-3">
+          Conformément à la <strong>Loi n° 2019-014</strong> relative à la protection des données à caractère personnel au Togo, vous disposez d'un droit d'accès, d'exportation intégrale et d'effacement de vos données.
+        </p>
+        <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap:10px;">
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportExpensesCSV()">
+            <i class="fa fa-download mr-1"></i> Exporter mes dépenses (CSV)
+          </button>
+          <button type="button" class="btn btn-sm btn-danger font-weight-bold" onclick="handleDeleteAccount()">
+            <i class="fa fa-trash mr-1"></i> Supprimer mon compte
+          </button>
+        </div>
+      </div>
     </section>
 
   </main>
@@ -475,6 +503,9 @@
   <!-- MODALE DE SAISIE DU BUDGET INITIAL (Demandé à l'étudiant dès son arrivée) -->
   <div id="modalInitialBudget" class="ny-modal-backdrop" style="display:none; z-index:10000; background:rgba(0, 45, 122, 0.85); backdrop-filter:blur(4px);">
     <div class="ny-modal-box text-center" style="max-width:440px;">
+      <div class="d-flex justify-content-end mb-1">
+        <button type="button" class="close" title="Fermer la fenêtre du budget" onclick="closeInitialBudgetModal()" style="font-size:24px; color:var(--ny-primary);">&times;</button>
+      </div>
       <div class="mb-3">
         <span class="badge badge-primary px-3 py-1 mb-2" style="background:var(--ny-primary); font-size:12px;">
           🎓 Bienvenue sur NyeGa !
@@ -499,6 +530,11 @@
           <span class="btn-text"><i class="fa fa-check mr-2"></i> Valider mon budget et démarrer</span>
           <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
         </button>
+        <div class="mt-2">
+          <button type="button" class="btn btn-link btn-sm text-muted" onclick="closeInitialBudgetModal()">
+            Définir plus tard
+          </button>
+        </div>
       </form>
     </div>
   </div>

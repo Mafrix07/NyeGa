@@ -1,0 +1,9 @@
+# Supabase environment & secrets
+.env
+.env.*
+.env.local
+!.env.example
+functions/*/.env
+functions/*/.env.*
+!functions/*/.env.example
+.temp/

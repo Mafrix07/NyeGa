@@ -106,6 +106,9 @@ CREATE POLICY "Les utilisateurs mettent à jour leur propre profil"
 CREATE POLICY "Création de profil par l'utilisateur connecté"
     ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
+CREATE POLICY "Les utilisateurs suppriment leur propre profil"
+    ON public.profiles FOR DELETE USING (auth.uid() = id);
+
 -- Politiques Categories
 CREATE POLICY "Lecture des catégories système et utilisateur"
     ON public.categories FOR SELECT USING (user_id IS NULL OR auth.uid() = user_id);
@@ -158,11 +161,16 @@ CREATE POLICY "Modification de ses dépenses"
 CREATE POLICY "Suppression de ses dépenses"
     ON public.expenses FOR DELETE USING (auth.uid() = user_id);
 
--- Politiques Rate Limits (RLS activée, consultation uniquement, AUCUN accès direct en écriture client)
-CREATE POLICY "Les étudiants lisent leur propre rate limit"
-    ON public.rate_limits FOR SELECT USING (auth.uid() = user_id);
+-- Politiques Rate Limits : RLS activée, AUCUN accès direct côté client (ni lecture ni écriture)
+DROP POLICY IF EXISTS "Les étudiants créent leur propre rate limit" ON public.rate_limits;
+DROP POLICY IF EXISTS "Les étudiants mettent à jour leur propre rate limit" ON public.rate_limits;
+DROP POLICY IF EXISTS "Les étudiants suppriment leur rate limit" ON public.rate_limits;
+DROP POLICY IF EXISTS "Les étudiants gèrent leur rate limit" ON public.rate_limits;
+DROP POLICY IF EXISTS "Les étudiants lisent leur propre rate limit" ON public.rate_limits;
 
-REVOKE INSERT, UPDATE, DELETE ON public.rate_limits FROM anon, authenticated;
+-- Révocation totale de tout droit direct pour anon et authenticated
+REVOKE ALL ON public.rate_limits FROM anon, authenticated;
+GRANT ALL ON public.rate_limits TO service_role;
 
 -- Fonction SQL d'incrémentation atomique (exécutée par l'Edge Function via service_role ou security definer)
 CREATE OR REPLACE FUNCTION public.check_and_increment_rate_limit(
@@ -206,10 +214,27 @@ BEGIN
     RETURN jsonb_build_object('limited', FALSE, 'count', v_count, 'reset_at', v_record.reset_at);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+REVOKE EXECUTE ON FUNCTION public.check_and_increment_rate_limit(UUID, INT, INTERVAL) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.check_and_increment_rate_limit(UUID, INT, INTERVAL) TO service_role;
 
 -- Index pour category_rules
 CREATE INDEX IF NOT EXISTS idx_category_rules_user_keyword
     ON public.category_rules (user_id, keyword);
+
+-- Fonction de suppression complète et conforme du compte utilisateur (Loi 2019-014 - Droit à l'effacement)
+CREATE OR REPLACE FUNCTION public.delete_user_account()
+RETURNS void AS $$
+BEGIN
+    DELETE FROM public.expenses WHERE user_id = auth.uid();
+    DELETE FROM public.budgets WHERE user_id = auth.uid();
+    DELETE FROM public.category_rules WHERE user_id = auth.uid();
+    DELETE FROM public.rate_limits WHERE user_id = auth.uid();
+    DELETE FROM public.profiles WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE EXECUTE ON FUNCTION public.delete_user_account() FROM anon;
+GRANT EXECUTE ON FUNCTION public.delete_user_account() TO authenticated;
 
 -- ====================================================================
 -- TRIGGERS AUTOMATIQUES

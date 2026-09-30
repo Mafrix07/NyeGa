@@ -1,0 +1,34 @@
+{
+  "name": "nyega",
+  "version": "1.0.0",
+  "description": "NyeGa - Application web mobile-first de gestion de budget pour étudiants togolais (Lomé, Togo)",
+  "main": "nyega-web/index.html",
+  "scripts": {
+    "start": "npx serve nyega-web -l 3000",
+    "audit": "npm audit --audit-level=high",
+    "audit:fix": "npm audit fix",
+    "test:rls": "echo 'Exécutez tests/rls_isolation_test.sql dans la console SQL Supabase'"
+  },
+  "keywords": [
+    "nyega",
+    "budget",
+    "etudiant",
+    "togo",
+    "lome",
+    "fcfa",
+    "supabase"
+  ],
+  "author": "NyeGa Team",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.8",
+    "chart.js": "^4.4.2",
+    "bootstrap": "^4.6.2",
+    "jquery": "^3.7.1",
+    "popper.js": "^1.16.1",
+    "font-awesome": "^4.7.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

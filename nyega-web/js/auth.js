@@ -3,6 +3,13 @@
  */
 
 document.addEventListener('DOMContentLoaded', async function() {
+  // Détection du retour d'un lien de réinitialisation de mot de passe Supabase
+  const hash = window.location.hash || '';
+  if (hash.includes('type=recovery') || hash.includes('access_token=') || hash.includes('reset-password')) {
+    switchAuthTab('new-password');
+    return;
+  }
+
   // Vérifie si l'utilisateur est déjà connecté
   try {
     const session = await NyegaDB.getSession();
@@ -29,7 +36,7 @@ function showAlert(message, type = 'danger') {
   const alertEl = document.getElementById('authAlert');
   const textEl = document.getElementById('authAlertText');
   alertEl.className = 'ny-alert ny-alert-' + type;
-  textEl.innerText = message;
+  textEl.textContent = message;
   alertEl.style.display = 'flex';
 }
 
@@ -44,22 +51,44 @@ function switchAuthTab(tab) {
   const tabRegister = document.getElementById('tabRegister');
   const formLogin = document.getElementById('formLogin');
   const formRegister = document.getElementById('formRegister');
+  const formReset = document.getElementById('formResetPassword');
+  const formNew = document.getElementById('formNewPassword');
+  const tabs = document.querySelector('.ny-auth-tabs');
 
   if (tab === 'login') {
-    tabLogin.classList.add('active');
-    tabRegister.classList.remove('active');
-    formLogin.style.display = 'block';
-    formRegister.style.display = 'none';
-  } else {
-    tabRegister.classList.add('active');
-    tabLogin.classList.remove('active');
-    formRegister.style.display = 'block';
-    formLogin.style.display = 'none';
+    if (tabs) tabs.style.display = 'flex';
+    if (tabLogin) tabLogin.classList.add('active');
+    if (tabRegister) tabRegister.classList.remove('active');
+    if (formLogin) formLogin.style.display = 'block';
+    if (formRegister) formRegister.style.display = 'none';
+    if (formReset) formReset.style.display = 'none';
+    if (formNew) formNew.style.display = 'none';
+  } else if (tab === 'register') {
+    if (tabs) tabs.style.display = 'flex';
+    if (tabRegister) tabRegister.classList.add('active');
+    if (tabLogin) tabLogin.classList.remove('active');
+    if (formRegister) formRegister.style.display = 'block';
+    if (formLogin) formLogin.style.display = 'none';
+    if (formReset) formReset.style.display = 'none';
+    if (formNew) formNew.style.display = 'none';
+  } else if (tab === 'reset') {
+    if (tabs) tabs.style.display = 'none';
+    if (formReset) formReset.style.display = 'block';
+    if (formLogin) formLogin.style.display = 'none';
+    if (formRegister) formRegister.style.display = 'none';
+    if (formNew) formNew.style.display = 'none';
+  } else if (tab === 'new-password') {
+    if (tabs) tabs.style.display = 'none';
+    if (formNew) formNew.style.display = 'block';
+    if (formLogin) formLogin.style.display = 'none';
+    if (formRegister) formRegister.style.display = 'none';
+    if (formReset) formReset.style.display = 'none';
   }
 }
 
 function setBtnLoading(btnId, isLoading) {
   const btn = document.getElementById(btnId);
+  if (!btn) return;
   const text = btn.querySelector('.btn-text');
   const spinner = btn.querySelector('.spinner-border');
   if (isLoading) {
@@ -71,25 +100,26 @@ function setBtnLoading(btnId, isLoading) {
   }
 }
 
-// Formatage des erreurs Supabase en français clair
+// Formatage sécurisé des erreurs Supabase sans divulgation d'existence d'email (Anti-enumeration)
 function formatAuthError(error) {
-  const msg = error.message || error.toString();
-  if (msg.includes('Invalid login credentials')) {
-    return 'Adresse email ou mot de passe incorrect.';
+  const msg = error ? (error.message || error.toString()) : '';
+
+  if (msg.includes('Invalid login credentials') || msg.includes('invalid_grant')) {
+    return 'Identifiants incorrects. Veuillez vérifier votre adresse email et votre mot de passe.';
   }
-  if (msg.includes('User already registered') || msg.includes('already exists')) {
-    return 'Un compte existe déjà avec cette adresse email.';
+  if (msg.includes('User already registered') || msg.includes('already exists') || msg.includes('Email already in use')) {
+    return 'Impossible de créer un compte avec ces informations. Si vous possédez déjà un compte, veuillez vous connecter ou demander la réinitialisation de votre mot de passe.';
   }
-  if (msg.includes('Password should be at least 6 characters')) {
-    return 'Le mot de passe doit comporter au moins 6 caractères.';
+  if (msg.includes('Password should be at least')) {
+    return 'Le mot de passe doit comporter au moins 8 caractères.';
   }
   if (msg.includes('Email not confirmed')) {
-    return 'Veuillez confirmer votre adresse email via le lien reçu.';
+    return 'Veuillez confirmer votre adresse email via le lien reçu avant de vous connecter.';
   }
-  if (msg.includes('rate limit')) {
-    return 'Trop de tentatives rapprochées. Veuillez patienter un instant.';
+  if (msg.includes('rate limit') || msg.includes('Too many requests')) {
+    return 'Trop de tentatives rapprochées. Veuillez patienter un instant avant de réessayer.';
   }
-  return msg || 'Une erreur est survenue lors de l\'authentification.';
+  return 'Une erreur est survenue lors de l\'authentification. Veuillez réessayer.';
 }
 
 async function handleLogin(event) {
@@ -133,8 +163,8 @@ async function handleRegister(event) {
     return;
   }
 
-  if (password.length < 6) {
-    showAlert('Le mot de passe doit comporter au moins 6 caractères.');
+  if (password.length < 8) {
+    showAlert('Le mot de passe doit comporter au moins 8 caractères.');
     return;
   }
 
@@ -158,6 +188,63 @@ async function handleRegister(event) {
     showAlert(formatAuthError(err), 'danger');
   } finally {
     setBtnLoading('btnRegisterSubmit', false);
+  }
+}
+
+async function handleRequestPasswordReset(event) {
+  event.preventDefault();
+  hideAlert();
+
+  const emailInput = document.getElementById('resetEmail');
+  const email = emailInput ? emailInput.value.trim() : '';
+
+  if (!email) {
+    showAlert('Veuillez renseigner votre adresse email.');
+    return;
+  }
+
+  setBtnLoading('btnResetPasswordSubmit', true);
+
+  try {
+    await NyegaDB.resetPasswordForEmail(email);
+    // Message neutre qui ne divulgue pas si l'email existe en base
+    showAlert('Si un compte correspond à cette adresse, vous recevrez un lien de réinitialisation sous peu.', 'success');
+  } catch (err) {
+    showAlert('Si un compte correspond à cette adresse, vous recevrez un lien de réinitialisation sous peu.', 'success');
+  } finally {
+    setBtnLoading('btnResetPasswordSubmit', false);
+  }
+}
+
+async function handleUpdateNewPassword(event) {
+  event.preventDefault();
+  hideAlert();
+
+  const newPassword = document.getElementById('newPassword').value;
+  const newPasswordConfirm = document.getElementById('newPasswordConfirm').value;
+
+  if (!newPassword || newPassword.length < 8) {
+    showAlert('Le mot de passe doit comporter au moins 8 caractères.');
+    return;
+  }
+
+  if (newPassword !== newPasswordConfirm) {
+    showAlert('Les mots de passe ne correspondent pas.');
+    return;
+  }
+
+  setBtnLoading('btnNewPasswordSubmit', true);
+
+  try {
+    await NyegaDB.updateUserPassword(newPassword);
+    showAlert('Votre mot de passe a été mis à jour avec succès ! Redirection...', 'success');
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 800);
+  } catch (err) {
+    showAlert('Erreur lors de la mise à jour : ' + (err.message || 'Veuillez refaire une demande de réinitialisation.'), 'danger');
+  } finally {
+    setBtnLoading('btnNewPasswordSubmit', false);
   }
 }
 
@@ -244,3 +331,12 @@ function handleSaveConfig(event) {
   closeConfigModal();
   showAlert('Configuration Supabase enregistrée avec succès !', 'success');
 }
+
+window.switchAuthTab = switchAuthTab;
+window.handleLogin = handleLogin;
+window.handleRegister = handleRegister;
+window.handleRequestPasswordReset = handleRequestPasswordReset;
+window.handleUpdateNewPassword = handleUpdateNewPassword;
+window.openConfigModal = openConfigModal;
+window.closeConfigModal = closeConfigModal;
+window.handleSaveConfig = handleSaveConfig;

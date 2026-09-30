@@ -50,7 +50,7 @@ export class GeminiFlashLiteProvider implements AIProvider {
 
   async categorize(description: string, signal?: AbortSignal): Promise<CategorizationResult> {
     if (!this.apiKey) {
-      console.warn('⚠️ GEMINI_API_KEY non configurée. Bascule automatique vers "Autres".');
+      console.error(`[Gemini API Failure] Code HTTP : 401 (Clé manquante) - Modèle : ${this.modelName} - Message : GEMINI_API_KEY non configurée. Bascule automatique vers "Autres".`);
       return { category: 'Autres', confidence: 0.0, source: 'fallback' };
     }
 
@@ -96,12 +96,6 @@ RÈGLES IMPORTANTES :
         signal: signal
       });
 
-      // Gestion spécifique de l'erreur 429 (quota atteint)
-      if (response.status === 429) {
-        console.warn('⚠️ Quota Gemini atteint (HTTP 429). Bascule silencieuse vers plan B (Autres).');
-        return { category: 'Autres', confidence: 0.0, source: 'fallback' };
-      }
-
       if (!response.ok) {
         let errorMsg = '';
         try {
@@ -111,8 +105,10 @@ RÈGLES IMPORTANTES :
           errorMsg = await response.text().catch(() => 'Erreur inconnue');
         }
         // Masquage strict de la clé API pour ne jamais l'exposer dans les logs
-        const sanitizedMsg = errorMsg.replace(/AIza[0-9A-Za-z-_]{35}/g, '***').replace(/key=[^&\s]+/gi, 'key=***');
-        console.error(`[Gemini API Failure] Code HTTP ${response.status} - Modèle ${this.modelName} - Message : ${sanitizedMsg}`);
+        const sanitizedMsg = String(errorMsg)
+          .replace(/AIza[0-9A-Za-z-_]{35}/g, '***')
+          .replace(/key=[^&\s]+/gi, 'key=***');
+        console.error(`[Gemini API Failure] Code HTTP : ${response.status} - Modèle : ${this.modelName} - Message : ${sanitizedMsg}`);
         return { category: 'Autres', confidence: 0.0, source: 'fallback' };
       }
 
@@ -146,11 +142,11 @@ RÈGLES IMPORTANTES :
 
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') {
-        console.warn('⏱️ Timeout IA dépassé (4s). Bascule vers Autres.');
+        console.error(`[Gemini API Failure] Code HTTP : 408 (Timeout) - Modèle : ${this.modelName} - Message : Timeout IA dépassé (4s). Bascule vers Autres.`);
       } else {
         const errorMsg = err instanceof Error ? err.message : String(err);
         const sanitizedMsg = errorMsg.replace(/AIza[0-9A-Za-z-_]{35}/g, '***').replace(/key=[^&\s]+/gi, 'key=***');
-        console.error(`[Gemini Call Error] Modèle ${this.modelName} - Exception : ${sanitizedMsg}`);
+        console.error(`[Gemini API Failure] Code HTTP : 500 (Exception) - Modèle : ${this.modelName} - Message : ${sanitizedMsg}`);
       }
       return { category: 'Autres', confidence: 0.0, source: 'fallback' };
     }

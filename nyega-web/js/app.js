@@ -17,7 +17,8 @@
     currentFormCategory: null,
     pickerTarget: null, // 'form' ou expenseId pour modification directe en 1 tap
     chartInstance: null,
-    autoCatDebounceTimer: null
+    autoCatDebounceTimer: null,
+    expensesLoadError: null
   };
 
   // ==========================================================
@@ -25,8 +26,15 @@
   // ==========================================================
   document.addEventListener('DOMContentLoaded', async function() {
     await initApp();
-    handleHashNavigation();
-    window.addEventListener('hashchange', handleHashNavigation);
+    window.addEventListener('hashchange', function() {
+      if (!state.budget && (window.location.hash === '#accueil' || !window.location.hash)) {
+        window.location.hash = '#budget';
+        navigateToScreen('budget', false);
+        openInitialBudgetModal();
+        return;
+      }
+      handleHashNavigation();
+    });
   });
 
   async function initApp() {
@@ -45,23 +53,54 @@
     const displayName = state.user.user_metadata?.full_name || state.user.email?.split('@')[0] || 'Étudiant';
     const nameEl = document.getElementById('userDisplayName');
     const avatarEl = document.getElementById('userAvatarText');
-    if (nameEl) nameEl.innerText = displayName;
-    if (avatarEl) avatarEl.innerText = displayName.charAt(0).toUpperCase();
+    if (nameEl) nameEl.textContent = displayName;
+    if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
 
-    // Bannière de connexion
+    // Bannière et boutons de configuration (retirés hors mode développement en production)
+    const isDev = window.NYEGA_CONFIG && typeof window.NYEGA_CONFIG.isDevMode === 'function' && window.NYEGA_CONFIG.isDevMode();
     const banner = document.getElementById('connectionBanner');
     if (banner) {
-      banner.style.display = NyegaDB.isLive() ? 'none' : 'block';
+      if (isDev) {
+        banner.style.display = 'block';
+      } else {
+        banner.remove(); // Retiré complètement en production
+      }
+    }
+    const configBtn = document.getElementById('btnConfigSupabase');
+    if (configBtn && !isDev) {
+      configBtn.remove();
+    }
+    const configModal = document.getElementById('configModal');
+    if (configModal && !isDev) {
+      configModal.remove();
     }
 
     // Chargement des données
     try {
       state.categories = await NyegaDB.getCategories();
+    } catch (e) {
+      console.warn('Erreur chargement catégories:', e);
+    }
+
+    try {
       state.budget = await NyegaDB.getBudget();
+    } catch (e) {
+      console.warn('Erreur chargement budget:', e);
+    }
+
+    try {
       state.expenses = await NyegaDB.getExpenses();
-      state.userRules = await NyegaDB.getUserRules();
+      state.expensesLoadError = null;
     } catch (err) {
-      console.error('Erreur chargement données:', err);
+      console.error('Erreur chargement dépenses:', err);
+      state.expenses = [];
+      state.expensesLoadError = err.message || "Le serveur Supabase est injoignable. Vos dépenses n'ont pas pu être chargées.";
+    }
+
+    try {
+      state.userRules = await NyegaDB.getUserRules();
+    } catch (e) {
+      console.warn('Erreur chargement règles:', e);
     }
 
     // Initialisation
@@ -70,13 +109,17 @@
     initBudgetForm();
     setDefaultExpenseDate();
 
-    // Si l'étudiant n'a pas encore défini son budget du mois, afficher l'écran dédié
+    // ONBOARDING STRICT : Si l'étudiant n'a pas encore défini son budget (ou a fermé la fenêtre),
+    // au prochain chargement on le redirige immédiatement vers la saisie du budget au lieu d'afficher un accueil vide.
     if (!state.budget) {
+      window.location.hash = '#budget';
+      navigateToScreen('budget', false);
       openInitialBudgetModal();
+    } else {
+      handleHashNavigation();
+      renderDashboard();
     }
 
-    // Rendu
-    renderDashboard();
     loadHistoryExpenses();
     updateDetectedPill('Autres', 'auto');
   }
@@ -92,6 +135,13 @@
   }
 
   function navigateToScreen(screenId, updateHash = true) {
+    // Si l'étudiant tente d'accéder à l'accueil sans avoir défini de budget, redirection vers la saisie
+    if (screenId === 'accueil' && !state.budget) {
+      screenId = 'budget';
+      openInitialBudgetModal();
+      showToast('⚠️ Veuillez d\'abord définir votre budget pour accéder au tableau de bord.');
+    }
+
     if (updateHash) {
       window.location.hash = '#' + screenId;
       return;
@@ -129,17 +179,9 @@
   // ==========================================================
   function renderDashboard() {
     if (!state.budget) {
-      const elRem = document.getElementById('homeRemainingAmount');
-      if (elRem) elRem.innerText = '-- FCFA';
-      const elSpent = document.getElementById('homeSpentAmount');
-      if (elSpent) elSpent.innerText = formatFCFA(0);
-      const elTot = document.getElementById('homeTotalBudget');
-      if (elTot) elTot.innerText = 'À définir';
-      const elDaily = document.getElementById('homeDailyAmount');
-      if (elDaily) elDaily.innerText = '-- FCFA / jour';
-      const elDays = document.getElementById('homeDaysLeft');
-      if (elDays) elDays.innerText = '--';
-      renderRecentExpenses();
+      // Redirection immédiate vers la saisie du budget au lieu d'afficher un accueil vide
+      navigateToScreen('budget', true);
+      openInitialBudgetModal();
       return;
     }
 
@@ -216,6 +258,17 @@
     const listEl = document.getElementById('homeRecentExpensesList');
     if (!listEl) return;
 
+    if (state.expensesLoadError) {
+      listEl.innerHTML = `
+        <div class="ny-empty-state">
+          <i class="fa fa-exclamation-triangle text-danger" style="font-size:32px; margin-bottom:10px;"></i>
+          <p class="font-weight-bold mb-1 text-danger">Serveur Supabase injoignable</p>
+          <p class="small text-muted mb-0">${escapeHTML(state.expensesLoadError)}</p>
+        </div>
+      `;
+      return;
+    }
+
     if (state.expenses.length === 0) {
       listEl.innerHTML = `
         <div class="ny-empty-state">
@@ -286,9 +339,9 @@
     const srcEl = document.getElementById('detectedCategorySource');
     const hidden = document.getElementById('selectedCategoryId');
 
-    if (nameEl) nameEl.innerText = cat.name;
-    if (iconEl) iconEl.className = 'fa ' + cat.icon;
-    if (srcEl) srcEl.innerText = source;
+    if (nameEl) nameEl.textContent = cat.name;
+    if (iconEl) iconEl.className = 'fa ' + (cat.icon || 'fa-tag');
+    if (srcEl) srcEl.textContent = source;
     if (pill) {
       pill.style.background = cat.color + '1A';
       pill.style.color = cat.color;
@@ -338,10 +391,11 @@
       });
 
       state.expenses.unshift(newExp);
+      state.expensesLoadError = null;
 
       showToast(`Dépense de ${formatFCFA(amount)} enregistrée (${finalCategoryName}) !`);
 
-      // Réinitialisation formulaire
+      // Réinitialisation formulaire uniquement en cas de succès
       document.getElementById('formAddExpense').reset();
       setDefaultExpenseDate();
       updateDetectedPill('Autres', 'auto');
@@ -351,7 +405,10 @@
       }, 350);
 
     } catch (err) {
-      showToast('Erreur : ' + (err.message || 'Impossible d\'enregistrer'));
+      console.error('Échec ajout dépense:', err);
+      // Affichage d'un message clair en français sans prétendre que la dépense est enregistrée
+      const msg = err.message || "Impossible d'enregistrer la dépense : le serveur Supabase est injoignable. Votre dépense n'a pas été enregistrée.";
+      showToast(`❌ ${msg}`);
     } finally {
       setBtnLoading(btn, false);
     }
@@ -364,17 +421,39 @@
     const listEl = document.getElementById('category1TapList');
     if (!listEl) return;
 
-    listEl.innerHTML = state.categories.map(cat => `
-      <div class="ny-1tap-item" onclick="select1TapCategory('${cat.name}', '${cat.id}')">
-        <div class="ny-1tap-icon" style="background:${cat.color}15; color:${cat.color};">
-          <i class="fa ${cat.icon}"></i>
-        </div>
-        <div>
-          <div class="ny-1tap-name">${cat.name}</div>
-          <small class="text-muted">Classer dans ${cat.name}</small>
-        </div>
-      </div>
-    `).join('');
+    listEl.innerHTML = '';
+    state.categories.forEach(cat => {
+      const item = document.createElement('div');
+      item.className = 'ny-1tap-item';
+      item.onclick = function() {
+        select1TapCategory(cat.name, cat.id);
+      };
+
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'ny-1tap-icon';
+      iconDiv.style.background = (cat.color || '#002D7A') + '15';
+      iconDiv.style.color = cat.color || '#002D7A';
+
+      const icon = document.createElement('i');
+      icon.className = 'fa ' + (cat.icon || 'fa-tag');
+      iconDiv.appendChild(icon);
+
+      const textDiv = document.createElement('div');
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'ny-1tap-name';
+      nameDiv.textContent = cat.name;
+
+      const descSmall = document.createElement('small');
+      descSmall.className = 'text-muted';
+      descSmall.textContent = 'Classer dans ' + cat.name;
+
+      textDiv.appendChild(nameDiv);
+      textDiv.appendChild(descSmall);
+
+      item.appendChild(iconDiv);
+      item.appendChild(textDiv);
+      listEl.appendChild(item);
+    });
   }
 
   function open1TapCategoryPicker(targetContext) {
@@ -429,64 +508,13 @@
     }
   }
 
-  // Liste complète des mots vides français (stop words) à ignorer pour l'apprentissage
-  const FRENCH_STOP_WORDS = new Set([
-    // Prépositions & conjonctions
-    'pour', 'chez', 'avec', 'sans', 'dans', 'sur', 'sous', 'vers', 'par',
-    'apres', 'avant', 'pendant', 'depuis', 'entre', 'contre',
-    'et', 'ou', 'mais', 'donc', 'or', 'ni', 'car',
-    // Articles & déterminants
-    'de', 'des', 'du', 'd', 'le', 'la', 'les', 'l',
-    'un', 'une', 'au', 'aux', 'a',
-    'ce', 'cet', 'cette', 'ces',
-    'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses',
-    'notre', 'nos', 'votre', 'vos', 'leur', 'leurs',
-    // Pronoms & auxiliaires & verbes génériques
-    'qui', 'que', 'quoi', 'dont', 'ou', 'y', 'en', 'se', 'sa', 'lui',
-    'moi', 'toi', 'soi', 'nous', 'vous', 'eux',
-    'aller', 'payer', 'achat', 'acheter', 'faire', 'fait', 'pris', 'prendre',
-    'est', 'sont', 'ete', 'avoir'
-  ]);
-
-  /**
-   * Extraction intelligente du mot-clé le plus significatif d'une description :
-   * 1. Supprime les mots vides français ("pour", "chez", "avec", "de", "le"...)
-   * 2. Donne la priorité absolue aux termes du domaine (présents dans le dictionnaire)
-   * 3. Sinon, retient le terme le plus informatif / significatif (le plus long / précis)
-   */
-  function extractMainKeyword(description) {
-    if (!description) return '';
-    const clean = window.normalizeText(description);
-    if (!clean) return '';
-
-    const allWords = clean.split(' ').filter(Boolean);
-    // Filtrage des mots vides français et des caractères isolés
-    const candidates = allWords.filter(w => w.length > 1 && !FRENCH_STOP_WORDS.has(w));
-
-    if (candidates.length === 0) {
-      // Si tous les mots étaient vides, retenir le mot le plus long du texte d'origine
-      return allWords.reduce((best, w) => w.length > best.length ? w : best, allWords[0] || description.trim());
+  // Extraction du mot-clé significatif : algorithme canonique défini dans js/local-dictionary.js
+  const extractMainKeyword = function(description) {
+    if (typeof window.extractMainKeyword === 'function') {
+      return window.extractMainKeyword(description, window.LOCAL_DICTIONARY);
     }
-
-    // Priorité 1 : Vérifier si un des mots candidats est un mot-clé reconnu du dictionnaire togolais
-    if (window.LOCAL_DICTIONARY) {
-      for (const word of candidates) {
-        for (const keywords of Object.values(window.LOCAL_DICTIONARY)) {
-          for (const kw of keywords) {
-            const cleanKw = window.normalizeText(kw);
-            if (cleanKw === word || cleanKw.split(' ').includes(word)) {
-              return word;
-            }
-          }
-        }
-      }
-    }
-
-    // Priorité 2 : Sinon, sélectionner le mot le plus significatif (le plus long parmi les candidats)
-    return candidates.reduce((best, w) => w.length > best.length ? w : best, candidates[0]);
-  }
-
-  window.extractMainKeyword = extractMainKeyword;
+    return (window.normalizeText ? window.normalizeText(description) : description).split(' ')[0] || description;
+  };
 
   // ==========================================================
   // ÉCRAN 4 : HISTORIQUE DES DÉPENSES
@@ -496,14 +524,45 @@
     const editCat = document.getElementById('editExpenseCategory');
     if (!selCat) return;
 
-    const options = state.categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
-    selCat.innerHTML = '<option value="all">Toutes les catégories</option>' + options;
-    if (editCat) editCat.innerHTML = options;
+    selCat.innerHTML = '';
+    const allOpt = document.createElement('option');
+    allOpt.value = 'all';
+    allOpt.textContent = 'Toutes les catégories';
+    selCat.appendChild(allOpt);
+
+    if (editCat) editCat.innerHTML = '';
+
+    state.categories.forEach(cat => {
+      const opt1 = document.createElement('option');
+      opt1.value = cat.id;
+      opt1.textContent = cat.name;
+      selCat.appendChild(opt1);
+
+      if (editCat) {
+        const opt2 = document.createElement('option');
+        opt2.value = cat.id;
+        opt2.textContent = cat.name;
+        editCat.appendChild(opt2);
+      }
+    });
   }
 
   function loadHistoryExpenses() {
     const listEl = document.getElementById('fullExpensesList');
     if (!listEl) return;
+
+    if (state.expensesLoadError) {
+      listEl.innerHTML = `
+        <div class="ny-empty-state">
+          <i class="fa fa-exclamation-triangle text-danger" style="font-size:32px; margin-bottom:10px;"></i>
+          <p class="font-weight-bold mb-1 text-danger">Serveur Supabase injoignable</p>
+          <p class="small text-muted mb-0">${escapeHTML(state.expensesLoadError)}</p>
+        </div>
+      `;
+      const countBadge = document.getElementById('historyCountBadge');
+      if (countBadge) countBadge.innerText = 'Indisponible';
+      return;
+    }
 
     const catFilter = document.getElementById('historyFilterCategory')?.value || 'all';
     const sortVal = document.getElementById('historySortBy')?.value || 'date-desc';
@@ -548,41 +607,51 @@
       color: '#64748B'
     };
 
-    // Pastille de catégorie cliquable en 1 tap
+    // Assainissement strict pour éviter tout XSS ou breakout d'attributs HTML
+    const rawId = String(exp.id || '');
+    const safeExpId = rawId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeCatName = escapeHTML(cat.name || 'Autres');
+    const safeCatIcon = /^[a-zA-Z0-9_-]+$/.test(cat.icon || '') ? cat.icon : 'fa-tag';
+    const safeCatColor = /^#[0-9a-fA-F]{3,8}$/.test(cat.color || '') ? cat.color : '#64748B';
+    const safeDescription = escapeHTML(exp.description || cat.name || 'Dépense');
+    const safeDate = escapeHTML(formatDateFr(exp.expense_date));
+    const safeAmount = escapeHTML(formatFCFA(exp.amount));
+
+    // Pastille de catégorie cliquable en 1 tap avec identifiant assaini
     const categoryBadgeHTML = `
-      <span class="badge" style="background:${cat.color}18; color:${cat.color}; cursor:pointer; font-weight:700; padding:4px 8px; border-radius:6px;" title="Changer en 1 tap" onclick="open1TapCategoryPicker('${exp.id}')">
-        <i class="fa ${cat.icon} mr-1"></i> ${cat.name} <i class="fa fa-caret-down ml-1 text-muted"></i>
+      <span class="badge" style="background:${safeCatColor}18; color:${safeCatColor}; cursor:pointer; font-weight:700; padding:4px 8px; border-radius:6px;" title="Changer en 1 tap" onclick="open1TapCategoryPicker('${safeExpId}')">
+        <i class="fa ${safeCatIcon} mr-1"></i> ${safeCatName} <i class="fa fa-caret-down ml-1 text-muted"></i>
       </span>
     `;
 
     const actionsHTML = withActions ? `
       <div class="ny-expense-actions">
-        <button type="button" class="ny-icon-btn" title="Modifier" onclick="openEditModal('${exp.id}')">
+        <button type="button" class="ny-icon-btn" title="Modifier" onclick="openEditModal('${safeExpId}')">
           <i class="fa fa-pencil"></i>
         </button>
-        <button type="button" class="ny-icon-btn btn-delete" title="Supprimer" onclick="confirmDeleteExpense('${exp.id}')">
+        <button type="button" class="ny-icon-btn btn-delete" title="Supprimer" onclick="confirmDeleteExpense('${safeExpId}')">
           <i class="fa fa-trash"></i>
         </button>
       </div>
     ` : '';
 
     return `
-      <div class="ny-expense-item" id="item-${exp.id}">
+      <div class="ny-expense-item" id="item-${safeExpId}">
         <div class="ny-expense-left">
-          <div class="ny-expense-cat-icon" style="background:${cat.color}15; color:${cat.color};">
-            <i class="fa ${cat.icon}"></i>
+          <div class="ny-expense-cat-icon" style="background:${safeCatColor}15; color:${safeCatColor};">
+            <i class="fa ${safeCatIcon}"></i>
           </div>
           <div>
-            <div class="ny-expense-title">${escapeHTML(exp.description || cat.name)}</div>
+            <div class="ny-expense-title">${safeDescription}</div>
             <div class="ny-expense-meta">
               ${categoryBadgeHTML}
               <span>•</span>
-              <span>${formatDateFr(exp.expense_date)}</span>
+              <span>${safeDate}</span>
             </div>
           </div>
         </div>
         <div class="ny-expense-right">
-          <div class="ny-expense-amount">- ${formatFCFA(exp.amount)}</div>
+          <div class="ny-expense-amount">- ${safeAmount}</div>
           ${actionsHTML}
         </div>
       </div>
@@ -696,23 +765,51 @@
 
     const tbody = document.getElementById('analyticsTableBody');
     if (tbody) {
+      tbody.innerHTML = '';
       const sortedCats = Object.values(catMap).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
       if (sortedCats.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Aucune dépense enregistrée.</td></tr>';
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 3;
+        td.className = 'text-center text-muted py-3';
+        td.textContent = 'Aucune dépense enregistrée.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
       } else {
-        tbody.innerHTML = sortedCats.map(c => {
-          const pct = totalSpent > 0 ? ((c.total / totalSpent) * 100).toFixed(1) : 0;
-          return `
-            <tr>
-              <td>
-                <span class="d-inline-block rounded-circle mr-2" style="width:10px;height:10px;background:${c.color};"></span>
-                <strong>${c.name}</strong>
-              </td>
-              <td><strong>${formatFCFA(c.total)}</strong></td>
-              <td><span class="badge badge-light border">${pct} %</span></td>
-            </tr>
-          `;
-        }).join('');
+        sortedCats.forEach(c => {
+          const pct = totalSpent > 0 ? ((c.total / totalSpent) * 100).toFixed(1) : '0.0';
+          const tr = document.createElement('tr');
+
+          // Catégorie
+          const tdCat = document.createElement('td');
+          const dot = document.createElement('span');
+          dot.className = 'd-inline-block rounded-circle mr-2';
+          dot.style.width = '10px';
+          dot.style.height = '10px';
+          dot.style.background = c.color || '#64748B';
+          const strongName = document.createElement('strong');
+          strongName.textContent = c.name;
+          tdCat.appendChild(dot);
+          tdCat.appendChild(strongName);
+
+          // Montant
+          const tdAmount = document.createElement('td');
+          const strongAmount = document.createElement('strong');
+          strongAmount.textContent = formatFCFA(c.total);
+          tdAmount.appendChild(strongAmount);
+
+          // Pourcentage
+          const tdPct = document.createElement('td');
+          const badge = document.createElement('span');
+          badge.className = 'badge badge-light border';
+          badge.textContent = `${pct} %`;
+          tdPct.appendChild(badge);
+
+          tr.appendChild(tdCat);
+          tr.appendChild(tdAmount);
+          tr.appendChild(tdPct);
+          tbody.appendChild(tr);
+        });
       }
     }
 
@@ -833,7 +930,15 @@
   // ==========================================================
   async function handleLogout() {
     if (confirm('Voulez-vous vous déconnecter de NyeGa ?')) {
-      await NyegaDB.signOut();
+      try {
+        await NyegaDB.signOut();
+      } catch (err) {
+        console.error('Erreur lors du signOut :', err);
+      }
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
       window.location.href = 'auth.html';
     }
   }
@@ -841,7 +946,7 @@
   function showToast(msg) {
     const toast = document.getElementById('nyegaToast');
     if (!toast) return;
-    toast.innerText = msg;
+    toast.textContent = msg;
     toast.style.display = 'block';
     setTimeout(() => {
       toast.style.display = 'none';
@@ -891,6 +996,13 @@
   function closeInitialBudgetModal() {
     const modal = document.getElementById('modalInitialBudget');
     if (modal) modal.style.display = 'none';
+    if (!state.budget) {
+      // Si l'étudiant ferme sans saisir, on le maintient sur l'écran budget
+      navigateToScreen('budget', false);
+      const bAmt = document.getElementById('budgetAmount');
+      if (bAmt) bAmt.focus();
+      showToast('💡 Veuillez définir votre budget mensuel ci-dessous pour initialiser votre tableau de bord.');
+    }
   }
 
   function setModalQuickBudget(amount) {
@@ -926,14 +1038,118 @@
       });
 
       state.budget = saved;
-      closeInitialBudgetModal();
+      const modal = document.getElementById('modalInitialBudget');
+      if (modal) modal.style.display = 'none';
       showToast(`Budget configuré : ${formatFCFA(amount)} !`);
       renderDashboard();
       initBudgetForm();
+      navigateToScreen('accueil');
     } catch (err) {
       showToast('Erreur : ' + (err.message || 'Impossible d\'enregistrer'));
     } finally {
       setBtnLoading(btn, false);
+    }
+  }
+
+  // Modale de configuration (accessible uniquement en mode développement)
+  function openConfigModal() {
+    if (!window.NYEGA_CONFIG || !window.NYEGA_CONFIG.isDevMode()) return;
+    const modal = document.getElementById('configModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeConfigModal() {
+    const modal = document.getElementById('configModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function handleSaveConfig(event) {
+    event.preventDefault();
+    if (!window.NYEGA_CONFIG || !window.NYEGA_CONFIG.isDevMode()) return;
+    const url = document.getElementById('cfgUrl')?.value?.trim();
+    const anonKey = document.getElementById('cfgAnonKey')?.value?.trim();
+    if (window.NYEGA_CONFIG.saveConfig) {
+      window.NYEGA_CONFIG.saveConfig(url, anonKey);
+      window.NyegaDB.reconnect();
+    }
+    closeConfigModal();
+    showToast('Configuration Supabase enregistrée.');
+    setTimeout(() => window.location.reload(), 400);
+  }
+
+  // ==========================================================
+  // EXPORT CSV & SUPPRESSION DE COMPTE (Loi 2019-014 Togo)
+  // ==========================================================
+  function sanitizeCSVField(val) {
+    let str = String(val == null ? '' : val);
+    // Protection anti-CSV Injection (CWE-1236) : neutralise =, +, -, @, tab, newline
+    if (/^[=+\-@\t\r]/.test(str)) {
+      str = "'" + str;
+    }
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+
+  function exportExpensesCSV() {
+    if (!state.expenses || state.expenses.length === 0) {
+      showToast('Aucune dépense à exporter.');
+      return;
+    }
+
+    const headers = ['Date', 'Montant (FCFA)', 'Catégorie', 'Moyen de Paiement', 'Description'];
+    const rows = state.expenses.map(exp => {
+      const cat = state.categories.find(c => c.id === exp.category_id);
+      const catName = cat ? cat.name : 'Autres';
+      const cleanDate = sanitizeCSVField(exp.expense_date || '');
+      const cleanAmount = Math.round(Number(exp.amount) || 0);
+      const cleanCat = sanitizeCSVField(catName);
+      const cleanPay = sanitizeCSVField(exp.payment_method || 'Espèces');
+      const cleanDesc = sanitizeCSVField(exp.description || '');
+      return [
+        cleanDate,
+        cleanAmount,
+        cleanCat,
+        cleanPay,
+        cleanDesc
+      ].join(';');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `nyega_depenses_${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Export CSV téléchargé avec succès !');
+  }
+
+  async function handleDeleteAccount() {
+    const msg = "⚠️ ATTENTION : La suppression de votre compte est définitive et irréversible.\n\n" +
+      "Toutes vos dépenses, vos budgets, vos règles personnalisées et votre profil seront définitivement effacés conformément à la Loi 2019-014.\n\n" +
+      "Voulez-vous vraiment continuer ?";
+    if (!confirm(msg)) return;
+
+    const confirmation = prompt("Pour confirmer définitivement la suppression, tapez 'SUPPRIMER' en lettres majuscules :");
+    if (confirmation !== 'SUPPRIMER') {
+      showToast('Suppression annulée.');
+      return;
+    }
+
+    try {
+      showToast('Suppression de vos données en cours...');
+      await NyegaDB.deleteAccount();
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
+      alert('Votre compte et l\'intégralité de vos données ont été définitivement supprimés.');
+      window.location.href = 'auth.html';
+    } catch (err) {
+      showToast('Erreur lors de la suppression : ' + (err.message || err));
     }
   }
 
@@ -953,5 +1169,10 @@
   window.closeInitialBudgetModal = closeInitialBudgetModal;
   window.setModalQuickBudget = setModalQuickBudget;
   window.handleInitialModalBudgetSubmit = handleInitialModalBudgetSubmit;
+  window.openConfigModal = openConfigModal;
+  window.closeConfigModal = closeConfigModal;
+  window.handleSaveConfig = handleSaveConfig;
+  window.exportExpensesCSV = exportExpensesCSV;
+  window.handleDeleteAccount = handleDeleteAccount;
 
 })(window);

@@ -7,6 +7,11 @@
   <meta name="description" content="NyeGa - Application de gestion de budget pour étudiants. Own your spending.">
   <link rel="icon" href="img/favicon.ico">
 
+  <!-- Security Headers & Defense-in-depth -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://*.supabase.co; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/font-awesome.min.css">
@@ -44,14 +49,15 @@
       <form id="formLogin" onsubmit="handleLogin(event)">
         <div class="ny-form-group text-left">
           <label for="loginEmail">Adresse Email</label>
-          <input type="email" id="loginEmail" class="ny-form-control" placeholder="etudiant@universite.fr" required>
+          <input type="email" id="loginEmail" class="ny-form-control" placeholder="etudiant@universite.tg" required>
         </div>
 
         <div class="ny-form-group text-left">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <label for="loginPassword" class="mb-0">Mot de passe</label>
+            <a href="javascript:void(0)" onclick="switchAuthTab('reset')" class="small text-muted" style="text-decoration:underline;">Mot de passe oublié ?</a>
           </div>
-          <input type="password" id="loginPassword" class="ny-form-control" placeholder="••••••••" required minlength="6">
+          <input type="password" id="loginPassword" class="ny-form-control" placeholder="••••••••" required minlength="8">
         </div>
 
         <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" id="btnLoginSubmit">
@@ -69,21 +75,68 @@
 
         <div class="ny-form-group text-left">
           <label for="regEmail">Adresse Email</label>
-          <input type="email" id="regEmail" class="ny-form-control" placeholder="etudiant@universite.fr" required>
+          <input type="email" id="regEmail" class="ny-form-control" placeholder="etudiant@universite.tg" required>
         </div>
 
         <div class="ny-form-group text-left">
-          <label for="regPassword">Mot de passe (min. 6 caractères)</label>
-          <input type="password" id="regPassword" class="ny-form-control" placeholder="••••••••" required minlength="6">
+          <label for="regPassword">Mot de passe (min. 8 caractères)</label>
+          <input type="password" id="regPassword" class="ny-form-control" placeholder="••••••••" required minlength="8">
         </div>
 
         <div class="ny-form-group text-left">
           <label for="regPasswordConfirm">Confirmer le mot de passe</label>
-          <input type="password" id="regPasswordConfirm" class="ny-form-control" placeholder="••••••••" required minlength="6">
+          <input type="password" id="regPasswordConfirm" class="ny-form-control" placeholder="••••••••" required minlength="8">
         </div>
 
         <button type="submit" class="ny-btn ny-btn-secondary ny-btn-block" id="btnRegisterSubmit">
           <span class="btn-text">Créer mon compte NyeGa</span>
+          <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
+        </button>
+      </form>
+
+      <!-- FORMULAIRE DEMANDE DE RÉINITIALISATION DU MOT DE PASSE -->
+      <form id="formResetPassword" onsubmit="handleRequestPasswordReset(event)" style="display: none;">
+        <div class="text-left mb-3">
+          <h5 class="font-weight-bold" style="color:var(--ny-primary);">Réinitialiser mon mot de passe</h5>
+          <p class="small text-muted mb-0">Entrez votre adresse email. Vous recevrez un lien sécurisé pour créer un nouveau mot de passe.</p>
+        </div>
+
+        <div class="ny-form-group text-left">
+          <label for="resetEmail">Adresse Email</label>
+          <input type="email" id="resetEmail" class="ny-form-control" placeholder="etudiant@universite.tg" required>
+        </div>
+
+        <button type="submit" class="ny-btn ny-btn-primary ny-btn-block mb-3" id="btnResetPasswordSubmit">
+          <span class="btn-text">Envoyer le lien de réinitialisation</span>
+          <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
+        </button>
+
+        <div class="text-center">
+          <a href="javascript:void(0)" onclick="switchAuthTab('login')" class="small font-weight-bold" style="color:var(--ny-primary);">
+            <i class="fa fa-arrow-left mr-1"></i> Retour à la connexion
+          </a>
+        </div>
+      </form>
+
+      <!-- FORMULAIRE DÉFINITION NOUVEAU MOT DE PASSE (RECOVERY) -->
+      <form id="formNewPassword" onsubmit="handleUpdateNewPassword(event)" style="display: none;">
+        <div class="text-left mb-3">
+          <h5 class="font-weight-bold" style="color:var(--ny-primary);">Nouveau mot de passe</h5>
+          <p class="small text-muted mb-0">Veuillez choisir un nouveau mot de passe d'au moins 8 caractères.</p>
+        </div>
+
+        <div class="ny-form-group text-left">
+          <label for="newPassword">Nouveau mot de passe (min. 8 caractères)</label>
+          <input type="password" id="newPassword" class="ny-form-control" placeholder="••••••••" required minlength="8">
+        </div>
+
+        <div class="ny-form-group text-left">
+          <label for="newPasswordConfirm">Confirmer le nouveau mot de passe</label>
+          <input type="password" id="newPasswordConfirm" class="ny-form-control" placeholder="••••••••" required minlength="8">
+        </div>
+
+        <button type="submit" class="ny-btn ny-btn-primary ny-btn-block mb-3" id="btnNewPasswordSubmit">
+          <span class="btn-text">Enregistrer mon nouveau mot de passe</span>
           <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
         </button>
       </form>
@@ -119,6 +172,13 @@
             <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
           </button>
         </form>
+      </div>
+
+      <!-- Liens légaux conformes Loi 2019-014 (Togo) -->
+      <div class="text-center mt-3 pt-2 border-top small text-muted">
+        <a href="politique-confidentialite.html" target="_blank" class="text-muted mr-2">Politique de confidentialité</a>
+        •
+        <a href="conditions-utilisation.html" target="_blank" class="text-muted ml-2">Conditions d'utilisation</a>
       </div>
 
     </div>

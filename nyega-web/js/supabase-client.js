@@ -44,15 +44,14 @@
 
   initClient();
 
-  // Stockage local pour mode démo ou fallback hors ligne
+  // Nettoyage de tout résidu de dépenses locales
+  try {
+    localStorage.removeItem('nyega_demo_expenses_fcfa');
+  } catch (e) {}
+
+  // Stockage local de secours (uniquement pour règles et cache budget)
+  // Strictement AUCUN stockage local de secours pour les dépenses
   const LocalStore = {
-    getExpenses: function() {
-      const data = localStorage.getItem('nyega_demo_expenses_fcfa');
-      return data ? JSON.parse(data) : [];
-    },
-    saveExpenses: function(expenses) {
-      localStorage.setItem('nyega_demo_expenses_fcfa', JSON.stringify(expenses));
-    },
     getBudget: function() {
       const data = localStorage.getItem('nyega_demo_budget_fcfa');
       return data ? JSON.parse(data) : null;
@@ -132,10 +131,70 @@
 
     signOut: async function() {
       if (this.isLive()) {
-        const { error } = await client.auth.signOut();
-        if (error) console.error(error);
+        try {
+          await client.auth.signOut();
+        } catch (error) {
+          console.error('Erreur déconnexion Supabase:', error);
+        }
       }
-      localStorage.removeItem('nyega_demo_user');
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
+      return true;
+    },
+
+    resetPasswordForEmail: async function(email) {
+      if (this.isLive()) {
+        const redirectUrl = window.location.origin + window.location.pathname;
+        const { data, error } = await client.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: redirectUrl
+        });
+        if (error) throw error;
+        return data;
+      } else {
+        return { success: true };
+      }
+    },
+
+    updateUserPassword: async function(newPassword) {
+      if (this.isLive()) {
+        const { data, error } = await client.auth.updateUser({
+          password: newPassword
+        });
+        if (error) throw error;
+        return data;
+      } else {
+        return { success: true };
+      }
+    },
+
+    deleteAccount: async function() {
+      if (this.isLive()) {
+        const user = await this.getUser();
+        if (!user) throw new Error('Utilisateur non connecté');
+
+        // Tentative d'utilisation de la procédure atomique delete_user_account()
+        try {
+          const { error: rpcErr } = await client.rpc('delete_user_account');
+          if (!rpcErr) {
+            await client.auth.signOut();
+            try { localStorage.clear(); sessionStorage.clear(); } catch(e){}
+            return true;
+          }
+        } catch(e) {}
+
+        // Fallback suppression séquentielle sous RLS
+        await client.from('expenses').delete().eq('user_id', user.id);
+        await client.from('budgets').delete().eq('user_id', user.id);
+        await client.from('category_rules').delete().eq('user_id', user.id);
+        await client.from('profiles').delete().eq('id', user.id);
+        await client.auth.signOut();
+      }
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
       return true;
     },
 
@@ -362,125 +421,116 @@
     // DÉPENSES (EXPENSES EN FCFA)
     // -------------------------------------------------------------
     getExpenses: async function(filters = {}) {
-      if (this.isLive()) {
-        try {
-          const user = await this.getUser();
-          if (user) {
-            let query = client
-              .from('expenses')
-              .select('*, categories(*)')
-              .eq('user_id', user.id);
-
-            if (filters.categoryId && filters.categoryId !== 'all') {
-              query = query.eq('category_id', filters.categoryId);
-            }
-
-            if (filters.sortBy === 'amount') {
-              query = query.order('amount', { ascending: filters.order === 'asc' });
-            } else {
-              query = query.order('expense_date', { ascending: filters.order === 'asc' });
-            }
-
-            const { data, error } = await query;
-            if (error) throw error;
-            return data || [];
-          }
-        } catch (e) {
-          console.warn('Erreur dépenses Supabase:', e.message);
-        }
+      if (!this.isLive()) {
+        throw new Error('Connexion à Supabase impossible : le serveur est injoignable. Vos dépenses ne peuvent pas être chargées.');
       }
 
-      let expenses = LocalStore.getExpenses();
+      const user = await this.getUser();
+      if (!user) {
+        return [];
+      }
+
+      let query = client
+        .from('expenses')
+        .select('*, categories(*)')
+        .eq('user_id', user.id);
+
       if (filters.categoryId && filters.categoryId !== 'all') {
-        expenses = expenses.filter(e => e.category_id === filters.categoryId);
+        query = query.eq('category_id', filters.categoryId);
       }
+
       if (filters.sortBy === 'amount') {
-        expenses.sort((a, b) => filters.order === 'asc' ? a.amount - b.amount : b.amount - a.amount);
+        query = query.order('amount', { ascending: filters.order === 'asc' });
       } else {
-        expenses.sort((a, b) => filters.order === 'asc' ? new Date(a.expense_date) - new Date(b.expense_date) : new Date(b.expense_date) - new Date(a.expense_date));
+        query = query.order('expense_date', { ascending: filters.order === 'asc' });
       }
-      return expenses;
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('Erreur chargement dépenses Supabase:', error);
+        throw new Error('Impossible de charger vos dépenses : le serveur Supabase est injoignable.');
+      }
+      return data || [];
     },
 
     addExpense: async function(expenseData) {
-      if (this.isLive()) {
-        const user = await this.getUser();
-        if (user) {
-          const payload = {
-            user_id: user.id,
-            amount: Math.round(parseFloat(expenseData.amount)),
-            description: expenseData.description || 'Dépense',
-            category_id: expenseData.category_id || null,
-            expense_date: expenseData.expense_date || new Date().toISOString().split('T')[0],
-            payment_method: expenseData.payment_method || 'Espèces'
-          };
-          const { data, error } = await client
-            .from('expenses')
-            .insert([payload])
-            .select();
-          if (error) throw error;
-          return data[0];
-        }
+      if (!this.isLive()) {
+        throw new Error("Impossible d'enregistrer la dépense : le serveur Supabase est injoignable. Votre dépense n'a pas été enregistrée.");
       }
 
-      const expenses = LocalStore.getExpenses();
-      const newExp = {
-        id: 'exp-' + Date.now(),
+      const user = await this.getUser();
+      if (!user) {
+        throw new Error("Session invalide ou expirée. Veuillez vous reconnecter pour enregistrer votre dépense.");
+      }
+
+      const payload = {
+        user_id: user.id,
         amount: Math.round(parseFloat(expenseData.amount)),
         description: expenseData.description || 'Dépense',
-        category_id: expenseData.category_id,
-        expense_date: expenseData.expense_date || new Date().toISOString().split('T')[0]
+        category_id: expenseData.category_id || null,
+        expense_date: expenseData.expense_date || new Date().toISOString().split('T')[0],
+        payment_method: expenseData.payment_method || 'Espèces'
       };
-      expenses.unshift(newExp);
-      LocalStore.saveExpenses(expenses);
-      return newExp;
+
+      const { data, error } = await client
+        .from('expenses')
+        .insert([payload])
+        .select('*, categories(*)');
+
+      if (error) {
+        console.error('Erreur insertion dépense Supabase:', error);
+        throw new Error("Échec de l'enregistrement sur Supabase (" + (error.message || 'serveur injoignable') + "). Votre dépense n'a pas été enregistrée.");
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error("Erreur de retour lors de l'enregistrement de la dépense.");
+      }
+
+      return data[0];
     },
 
     updateExpense: async function(expenseId, expenseData) {
-      if (this.isLive()) {
-        const payload = {
-          amount: Math.round(parseFloat(expenseData.amount)),
-          description: expenseData.description,
-          category_id: expenseData.category_id,
-          expense_date: expenseData.expense_date,
-          updated_at: new Date().toISOString()
-        };
-        const { data, error } = await client
-          .from('expenses')
-          .update(payload)
-          .eq('id', expenseId)
-          .select();
-        if (error) throw error;
-        return data[0];
+      if (!this.isLive()) {
+        throw new Error("Connexion à Supabase impossible : le serveur est injoignable. La modification n'a pas été enregistrée.");
       }
 
-      const expenses = LocalStore.getExpenses();
-      const idx = expenses.findIndex(e => e.id === expenseId);
-      if (idx !== -1) {
-        expenses[idx] = {
-          ...expenses[idx],
-          ...expenseData,
-          amount: Math.round(parseFloat(expenseData.amount))
-        };
-        LocalStore.saveExpenses(expenses);
-        return expenses[idx];
+      const payload = {
+        amount: Math.round(parseFloat(expenseData.amount)),
+        description: expenseData.description,
+        category_id: expenseData.category_id,
+        expense_date: expenseData.expense_date,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await client
+        .from('expenses')
+        .update(payload)
+        .eq('id', expenseId)
+        .select('*, categories(*)');
+
+      if (error) {
+        console.error('Erreur mise à jour dépense Supabase:', error);
+        throw new Error("Échec de la modification sur Supabase (" + (error.message || 'serveur injoignable') + ").");
       }
-      throw new Error('Dépense introuvable');
+
+      return data?.[0] || payload;
     },
 
     deleteExpense: async function(expenseId) {
-      if (this.isLive()) {
-        const { error } = await client
-          .from('expenses')
-          .delete()
-          .eq('id', expenseId);
-        if (error) throw error;
-        return true;
+      if (!this.isLive()) {
+        throw new Error("Connexion à Supabase impossible : le serveur est injoignable. La suppression n'a pas été effectuée.");
       }
 
-      let expenses = LocalStore.getExpenses();
-      expenses = expenses.filter(e => e.id !== expenseId);
-      LocalStore.saveExpenses(expenses);
+      const { error } = await client
+        .from('expenses')
+        .delete()
+        .eq('id', expenseId);
+
+      if (error) {
+        console.error('Erreur suppression dépense Supabase:', error);
+        throw new Error("Échec de la suppression sur Supabase (" + (error.message || 'serveur injoignable') + ").");
+      }
+
       return true;
     }
   };
