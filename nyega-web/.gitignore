@@ -3,6 +3,19 @@
 .env.*
 .env.local
 !.env.example
+
+# Dépendances
 node_modules/
+
+# Logs & données utilisateur
 *.log
 *.csv
+
+# Playwright — rapports et états d'authentification (CRITIQUE : peut contenir des tokens)
+playwright-report/
+test-results/
+playwright/.auth/
+**/.auth/
+**/auth-state*.json
+**/storage-state*.json
+**/session-state*.json

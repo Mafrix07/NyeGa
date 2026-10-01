@@ -1,0 +1,1960 @@
+/**
+ * NYEGA REFONTE DESIGN — Couche de raffinement visuel
+ * Branche : refonte-design
+ * Date    : 2026-10-01
+ *
+ * Ce fichier s'applique AU-DESSUS de nyega-theme.css et nyega-app.css.
+ * Il n'introduit AUCUNE couleur hors tokens, ne modifie AUCUN fichier JS,
+ * ne touche à AUCUN id ni attribut utilisé par le JS.
+ *
+ * Référence : nyega-web/DESIGN.md v2.0
+ *
+ * Sections :
+ *  1. Variables de raffinement
+ *  2. Typographie — échelle cohérente
+ *  3. Écran auth (connexion/inscription)
+ *  4. Écran accueil (dashboard)
+ *  5. Écran ajout de dépense
+ *  6. Écran historique
+ *  7. Écran analyse
+ *  8. Écran budget
+ *  9. Composants globaux (boutons, champs, cartes, pastilles)
+ * 10. Jauges et barres de progression
+ * 11. États vides / erreur / chargement
+ * 12. Toast et modales
+ * 13. Navigation (sidebar desktop + bottom nav mobile)
+ * 14. prefers-reduced-motion (renfort)
+ * 15. Cibles tactiles ≥ 44 px (audit)
+ */
+
+/* ============================================================
+   1. VARIABLES DE RAFFINEMENT
+   ============================================================ */
+:root {
+  /* Espacements harmoniques — pas de 4px */
+  --ny-space-1:  4px;
+  --ny-space-2:  8px;
+  --ny-space-3: 12px;
+  --ny-space-4: 16px;
+  --ny-space-5: 20px;
+  --ny-space-6: 24px;
+  --ny-space-8: 32px;
+  --ny-space-12: 48px;
+  --ny-space-16: 64px;
+
+  /* Typographie — échelle 1.25 (quarte majeure) depuis base 14px */
+  --ny-text-display: 2.25rem;   /* 36px — montant héros */
+  --ny-text-h1:      1.75rem;   /* 28px */
+  --ny-text-h2:      1.375rem;  /* 22px */
+  --ny-text-h3:      1.125rem;  /* 18px */
+  --ny-text-h4:      1rem;      /* 16px */
+  --ny-text-body-lg: 1rem;      /* 16px — inputs (évite zoom iOS) */
+  --ny-text-body-md: 0.875rem;  /* 14px */
+  --ny-text-body-sm: 0.8125rem; /* 13px */
+  --ny-text-label:   0.6875rem; /* 11px — uppercase + tracking */
+  --ny-text-caption: 0.75rem;   /* 12px */
+
+  /* Line-heights */
+  --ny-lh-tight:  1.15;
+  --ny-lh-snug:   1.35;
+  --ny-lh-normal: 1.5;
+  --ny-lh-loose:  1.65;
+}
+
+/* ============================================================
+   2. TYPOGRAPHIE — ÉCHELLE COHÉRENTE
+   ============================================================ */
+
+/* Corps de texte */
+body {
+  font-size: var(--ny-text-body-md);
+  line-height: var(--ny-lh-normal);
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+/* Titres de section */
+h1, .ny-text-h1 {
+  font-size: var(--ny-text-h1);
+  line-height: var(--ny-lh-tight);
+  letter-spacing: -0.5px;
+}
+h2, .ny-text-h2 {
+  font-size: var(--ny-text-h2);
+  line-height: var(--ny-lh-snug);
+  letter-spacing: -0.3px;
+}
+h3, h4, h5, .ny-text-h3 {
+  font-size: var(--ny-text-h3);
+  line-height: var(--ny-lh-snug);
+}
+
+/* Titres de cartes — raffinement */
+.ny-card-title {
+  font-size: var(--ny-text-h3);
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  gap: var(--ny-space-2);
+}
+@media (min-width: 576px) {
+  .ny-card-title {
+    font-size: calc(var(--ny-text-h3) + 1px);
+  }
+}
+
+/* Labels de formulaires */
+.ny-form-group label,
+.ny-filter-select label {
+  font-size: var(--ny-text-body-sm);
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  color: var(--ny-on-surface-variant);
+  margin-bottom: var(--ny-space-2);
+}
+
+/* Texte muted standard */
+.text-muted,
+.small.text-muted {
+  color: var(--ny-text-muted) !important;
+  font-size: var(--ny-text-body-sm);
+}
+
+/* ============================================================
+   3. ÉCRAN AUTH — Connexion / Inscription
+   Logo obligatoire ici uniquement.
+   ============================================================ */
+
+/* Fond : gradient léger centré sur la marque */
+.ny-auth-wrapper {
+  background: linear-gradient(160deg, var(--ny-surface-tinted) 0%, #FFFFFF 60%);
+  padding: var(--ny-space-4) var(--ny-space-3);
+}
+@media (min-width: 576px) {
+  .ny-auth-wrapper {
+    padding: var(--ny-space-6) var(--ny-space-4);
+  }
+}
+
+/* Carte auth — élévation renforcée */
+.ny-auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: #FFFFFF;
+  border-radius: var(--ny-radius-lg);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 45, 122, 0.04),
+    0 16px 40px rgba(0, 45, 122, 0.10);
+  padding: var(--ny-space-6) var(--ny-space-4) var(--ny-space-6);
+  border: 1px solid var(--ny-outline);
+  text-align: center;
+}
+@media (min-width: 576px) {
+  .ny-auth-card {
+    padding: 2.25rem 1.875rem;
+  }
+}
+
+/* Logo — taille cohérente */
+.ny-auth-logo-img {
+  max-width: 148px;
+  height: auto;
+  display: block;
+  margin: 0 auto var(--ny-space-2);
+}
+@media (min-width: 576px) {
+  .ny-auth-logo-img {
+    max-width: 172px;
+    margin-bottom: var(--ny-space-3);
+  }
+}
+
+/* Sous-titre auth */
+.ny-auth-subtitle {
+  font-size: var(--ny-text-body-sm);
+  color: var(--ny-on-surface-variant);
+  line-height: var(--ny-lh-normal);
+  margin-bottom: var(--ny-space-5);
+}
+
+/* Onglets Connexion / Inscription */
+.ny-auth-tabs {
+  display: flex;
+  background: var(--ny-surface-variant);
+  border-radius: var(--ny-radius-sm);
+  padding: 3px;
+  margin-bottom: var(--ny-space-5);
+  gap: 2px;
+}
+.ny-auth-tab {
+  flex: 1;
+  padding: 10px var(--ny-space-4);
+  border-radius: calc(var(--ny-radius-sm) - 2px);
+  font-weight: 700;
+  font-size: var(--ny-text-body-sm);
+  color: var(--ny-on-surface-variant);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: var(--ny-transition);
+  min-height: 44px;           /* Cible tactile */
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+}
+.ny-auth-tab.active {
+  background: #FFFFFF;
+  color: var(--ny-primary);
+  box-shadow: 0 1px 4px rgba(0, 45, 122, 0.12), 0 3px 8px rgba(0, 45, 122, 0.06);
+}
+.ny-auth-tab:hover:not(.active) {
+  color: var(--ny-on-surface);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Lien "Mot de passe oublié" */
+.ny-auth-card a.small.text-muted {
+  font-size: var(--ny-text-caption);
+  color: var(--ny-on-surface-variant) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ny-auth-card a.small.text-muted:hover {
+  color: var(--ny-primary) !important;
+}
+
+/* Liens légaux en bas */
+.ny-auth-card .border-top a.text-muted {
+  font-size: var(--ny-text-caption);
+  color: var(--ny-text-muted) !important;
+}
+.ny-auth-card .border-top a.text-muted:hover {
+  color: var(--ny-primary) !important;
+  text-decoration: underline;
+}
+
+/* Titre formulaire réinitialisation */
+.ny-auth-card h5[style*="color:var(--ny-primary)"] {
+  font-size: var(--ny-text-h3);
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  margin-bottom: var(--ny-space-2);
+}
+
+/* Badge étape onboarding */
+.ny-auth-card .badge.badge-primary,
+.ny-auth-card span.badge[style*="background:var(--ny-primary)"] {
+  background: var(--ny-primary) !important;
+  color: var(--ny-on-primary);
+  font-size: var(--ny-text-caption);
+  font-weight: 700;
+  border-radius: var(--ny-radius-full);
+  padding: 4px 14px;
+  letter-spacing: 0.2px;
+  display: inline-block;
+  margin-bottom: var(--ny-space-2);
+}
+
+/* Titre bienvenue onboarding */
+.ny-auth-card h4[style*="color:var(--ny-primary)"] {
+  font-size: var(--ny-text-h2);
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--ny-primary);
+}
+
+/* ============================================================
+   4. ÉCRAN ACCUEIL — Dashboard
+   ============================================================ */
+
+/* Grille desktop 2 colonnes */
+@media (min-width: 1025px) {
+  .ny-home-grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: var(--ny-space-8);
+    align-items: start;
+  }
+}
+
+/* Carte Héros — Budget Disponible */
+.ny-budget-hero-card {
+  background: linear-gradient(140deg, var(--ny-primary) 0%, #001B49 100%);
+  border-radius: var(--ny-radius-lg);
+  padding: var(--ny-space-4) var(--ny-space-4);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 45, 122, 0.2),
+    0 16px 40px rgba(0, 45, 122, 0.25);
+  margin-bottom: var(--ny-space-4);
+  border: none;
+}
+@media (min-width: 576px) {
+  .ny-budget-hero-card {
+    padding: var(--ny-space-6) var(--ny-space-6);
+    margin-bottom: var(--ny-space-6);
+  }
+}
+
+/* Décoration subtile : halo doré en coin supérieur droit */
+.ny-budget-hero-card::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(251, 180, 24, 0.15) 0%, transparent 65%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* Décoration teal en coin inférieur gauche */
+.ny-budget-hero-card::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: -30px;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(16, 185, 130, 0.12) 0%, transparent 65%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Label du montant restant */
+.ny-budget-hero-label {
+  font-size: var(--ny-text-label);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+  margin-bottom: var(--ny-space-1);
+}
+
+/* Montant restant principal */
+.ny-budget-remaining-amount {
+  font-size: 1.875rem;   /* 30px mobile */
+  font-family: var(--ny-font-heading);
+  font-weight: 900;
+  line-height: var(--ny-lh-tight);
+  color: #FFFFFF;
+  word-break: break-word;
+  letter-spacing: -0.5px;
+}
+@media (min-width: 480px) {
+  .ny-budget-remaining-amount {
+    font-size: 2.375rem;  /* 38px */
+  }
+}
+@media (min-width: 576px) {
+  .ny-budget-remaining-amount {
+    font-size: 3rem;      /* 48px */
+    line-height: 1;
+  }
+}
+
+/* Top row de la hero card */
+.ny-budget-hero-top {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: var(--ny-space-3);
+  margin-bottom: var(--ny-space-4);
+}
+@media (min-width: 576px) {
+  .ny-budget-hero-top {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ny-space-4);
+  }
+}
+
+/* Labels de progression */
+.ny-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ny-space-1);
+  font-size: var(--ny-text-caption);
+  color: rgba(255, 255, 255, 0.80);
+  margin-bottom: var(--ny-space-2);
+  font-weight: 500;
+}
+.ny-progress-labels strong {
+  font-weight: 700;
+}
+
+/* Carte Budget Journalier */
+.ny-daily-card {
+  background: #FFFFFF;
+  border-radius: var(--ny-radius);
+  padding: var(--ny-space-3) var(--ny-space-4);
+  border-left: 5px solid var(--ny-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ny-space-3);
+  margin-bottom: var(--ny-space-4);
+  box-shadow: var(--ny-shadow-sm);
+  transition: var(--ny-transition);
+}
+.ny-daily-card:hover {
+  box-shadow: var(--ny-shadow);
+}
+@media (min-width: 576px) {
+  .ny-daily-card {
+    padding: var(--ny-space-5);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--ny-space-6);
+  }
+}
+
+.ny-daily-title {
+  font-size: var(--ny-text-label);
+  color: var(--ny-on-surface-variant);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  margin-bottom: var(--ny-space-1);
+}
+
+.ny-daily-amount {
+  font-size: 1.25rem;
+  font-family: var(--ny-font-heading);
+  font-weight: 900;
+  color: var(--ny-primary);
+  letter-spacing: -0.2px;
+}
+@media (min-width: 576px) {
+  .ny-daily-amount {
+    font-size: 1.625rem;
+  }
+}
+
+.ny-daily-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--ny-secondary-container);
+  color: var(--ny-on-secondary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Grille de stats (2 colonnes) */
+.ny-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ny-space-3);
+  margin-bottom: var(--ny-space-6);
+}
+@media (min-width: 576px) {
+  .ny-stats-grid {
+    gap: var(--ny-space-4);
+  }
+}
+
+/* ============================================================
+   5. ÉCRAN AJOUT DE DÉPENSE
+   ============================================================ */
+
+/* Indicateur de catégorisation automatique */
+.ny-auto-category-box {
+  background: var(--ny-surface-variant);
+  border: 1.5px dashed var(--ny-outline-variant);
+  border-radius: var(--ny-radius);
+  padding: var(--ny-space-3) var(--ny-space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ny-space-2);
+  margin-bottom: var(--ny-space-5);
+  transition: var(--ny-transition);
+}
+@media (min-width: 576px) {
+  .ny-auto-category-box {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--ny-space-4) var(--ny-space-5);
+    gap: var(--ny-space-4);
+  }
+}
+
+/* Pastille de catégorie détectée */
+.ny-auto-category-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ny-space-2);
+  min-height: 44px;
+  padding: var(--ny-space-2) var(--ny-space-4);
+  border-radius: var(--ny-radius-full);
+  font-size: var(--ny-text-body-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  border: 1.5px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.1px;
+}
+@media (min-width: 576px) {
+  .ny-auto-category-pill {
+    justify-content: flex-start;
+  }
+}
+.ny-auto-category-pill:hover {
+  transform: scale(1.02);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.10);
+}
+
+/* Label de source dans la pastille */
+.ny-pill-source-badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.09);
+  font-weight: 700;
+  margin-left: var(--ny-space-1);
+}
+
+/* Input montant hero */
+.ny-input-amount {
+  font-size: 1.625rem;
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  text-align: center;
+  color: var(--ny-primary);
+  padding: var(--ny-space-3);
+  letter-spacing: -0.5px;
+}
+@media (min-width: 576px) {
+  .ny-input-amount {
+    font-size: 2rem;
+    padding: var(--ny-space-4);
+  }
+}
+
+/* Grille chips rapides */
+.ny-quick-amounts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ny-space-2);
+  margin-top: var(--ny-space-2);
+  margin-bottom: var(--ny-space-5);
+}
+@media (min-width: 768px) {
+  .ny-quick-amounts {
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--ny-space-2);
+  }
+}
+
+/* ============================================================
+   6. ÉCRAN HISTORIQUE
+   ============================================================ */
+
+/* Item de dépense */
+.ny-expense-item {
+  background: #FFFFFF;
+  border: 1px solid var(--ny-outline);
+  border-radius: var(--ny-radius);
+  padding: var(--ny-space-3) var(--ny-space-3);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ny-space-2);
+  transition: var(--ny-transition);
+  position: relative;
+}
+@media (min-width: 576px) {
+  .ny-expense-item {
+    padding: var(--ny-space-4) var(--ny-space-5);
+    align-items: center;
+    gap: var(--ny-space-4);
+  }
+}
+.ny-expense-item:hover {
+  box-shadow: var(--ny-shadow-sm);
+  border-color: var(--ny-outline-variant);
+  transform: none; /* Pas de déplacement — subtilité seulement */
+}
+
+/* Icône de catégorie */
+.ny-expense-cat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+@media (min-width: 576px) {
+  .ny-expense-cat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+}
+
+/* Titre de la dépense */
+.ny-expense-title {
+  font-weight: 700;
+  font-size: var(--ny-text-body-sm);
+  line-height: var(--ny-lh-snug);
+  color: var(--ny-on-surface);
+  margin-bottom: 2px;
+}
+@media (min-width: 576px) {
+  .ny-expense-title {
+    font-size: var(--ny-text-body-md);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+  }
+}
+
+/* Métadonnées (date, catégorie) */
+.ny-expense-meta {
+  font-size: var(--ny-text-caption);
+  color: var(--ny-on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: var(--ny-space-1);
+  flex-wrap: wrap;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* Montant — rouge, insécable */
+.ny-expense-amount {
+  font-size: var(--ny-text-body-md);
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  color: var(--ny-danger);
+  white-space: nowrap !important;
+  letter-spacing: -0.2px;
+}
+@media (min-width: 576px) {
+  .ny-expense-amount {
+    font-size: 1.0625rem;
+  }
+}
+
+/* Bouton icône (édition/suppression) */
+.ny-icon-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--ny-radius-sm);
+  border: 1px solid var(--ny-outline);
+  background: #FFFFFF;
+  color: var(--ny-on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  font-size: 0.875rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.ny-icon-btn:hover {
+  background: var(--ny-surface-variant);
+  color: var(--ny-primary);
+  border-color: var(--ny-primary);
+}
+.ny-icon-btn.btn-delete:hover {
+  background: var(--ny-danger-container);
+  color: var(--ny-danger);
+  border-color: var(--ny-danger);
+}
+
+/* Badge de catégorie dans les listes — non interactif */
+.ny-expense-item .badge,
+.ny-expense-meta .badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: default !important;
+  pointer-events: none !important;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.4;
+}
+/* Masque la flèche dropdown sur les badges */
+.ny-expense-item .badge .fa-caret-down,
+.ny-expense-meta .badge .fa-caret-down {
+  display: none !important;
+}
+
+/* ============================================================
+   7. ÉCRAN ANALYSE
+   ============================================================ */
+
+/* Grille desktop 2 colonnes */
+@media (min-width: 1025px) {
+  .ny-analytics-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: var(--ny-space-8);
+    align-items: start;
+  }
+  .ny-analytics-chart-col {
+    background: var(--ny-surface-variant);
+    border: 1px solid var(--ny-outline);
+    border-radius: var(--ny-radius);
+    padding: var(--ny-space-5);
+    position: sticky;
+    top: calc(28px + var(--ny-space-4));
+  }
+  .ny-analytics-chart-col .ny-chart-wrapper {
+    height: 360px;
+    margin: 0;
+  }
+}
+
+/* Wrapper du graphique */
+.ny-chart-wrapper {
+  position: relative;
+  height: 240px;
+  margin: var(--ny-space-4) 0;
+}
+@media (min-width: 576px) {
+  .ny-chart-wrapper {
+    height: 280px;
+    margin: var(--ny-space-5) 0;
+  }
+}
+
+/* Stat boxes d'analyse */
+.ny-stat-box {
+  background: #FFFFFF;
+  border-radius: var(--ny-radius);
+  border: 1px solid var(--ny-outline);
+  padding: var(--ny-space-3) var(--ny-space-4);
+  box-shadow: var(--ny-shadow-sm);
+  transition: var(--ny-transition);
+}
+.ny-stat-box:hover {
+  box-shadow: var(--ny-shadow);
+}
+@media (min-width: 576px) {
+  .ny-stat-box {
+    padding: var(--ny-space-4);
+  }
+}
+.ny-stat-box-label {
+  font-size: var(--ny-text-label);
+  color: var(--ny-on-surface-variant);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--ny-space-1);
+}
+.ny-stat-box-value {
+  font-size: 1.125rem;
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  color: var(--ny-primary);
+  letter-spacing: -0.2px;
+}
+@media (min-width: 576px) {
+  .ny-stat-box-value {
+    font-size: 1.25rem;
+  }
+}
+/* La plus grosse dépense en rouge */
+.ny-stat-box-value.text-danger {
+  color: var(--ny-danger) !important;
+}
+
+/* Titre section tableau */
+#screen-analyse h5[style*="color:var(--ny-primary)"] {
+  font-size: var(--ny-text-h3);
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  color: var(--ny-primary);
+  letter-spacing: -0.2px;
+  margin-bottom: var(--ny-space-3);
+}
+
+/* Tableau de ventilation */
+.ny-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.ny-breakdown-table th {
+  text-align: left;
+  font-size: var(--ny-text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  color: var(--ny-on-surface-variant);
+  padding: var(--ny-space-2) var(--ny-space-2);
+  border-bottom: 2px solid var(--ny-outline);
+}
+.ny-breakdown-table td {
+  padding: var(--ny-space-2) var(--ny-space-2);
+  font-size: var(--ny-text-body-sm);
+  border-bottom: 1px solid var(--ny-outline);
+  color: var(--ny-on-surface);
+  vertical-align: middle;
+}
+.ny-breakdown-table tr:last-child td {
+  border-bottom: none;
+}
+.ny-breakdown-table tr:hover td {
+  background: var(--ny-surface-variant);
+}
+@media (min-width: 576px) {
+  .ny-breakdown-table th {
+    padding: var(--ny-space-2) var(--ny-space-4);
+  }
+  .ny-breakdown-table td {
+    padding: var(--ny-space-3) var(--ny-space-4);
+    font-size: var(--ny-text-body-md);
+  }
+}
+
+/* ============================================================
+   8. ÉCRAN BUDGET — Configuration
+   ============================================================ */
+
+/* Input budget principal */
+#budgetAmount {
+  font-size: 1.5rem !important;
+  font-family: var(--ny-font-heading) !important;
+  font-weight: 800 !important;
+  color: var(--ny-primary) !important;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+/* Carte conseil NyeGa — teintée bleu */
+#screen-budget .ny-card[style*="primary-container"] {
+  background: var(--ny-primary-container) !important;
+  border-color: rgba(0, 45, 122, 0.15) !important;
+  border-radius: var(--ny-radius);
+}
+#screen-budget .ny-card[style*="primary-container"] h5 {
+  font-size: var(--ny-text-body-md);
+  font-weight: 800;
+  color: var(--ny-primary);
+  margin-bottom: var(--ny-space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--ny-space-2);
+}
+#screen-budget .ny-card[style*="primary-container"] p {
+  font-size: var(--ny-text-body-sm);
+  color: var(--ny-on-primary-container);
+  line-height: var(--ny-lh-normal);
+  margin: 0;
+}
+
+/* Carte suppression de compte — bord rouge */
+#screen-budget .ny-card[style*="#FFF5F5"] {
+  border: 1.5px solid rgba(220, 38, 38, 0.25) !important;
+  background: #FFF8F8 !important;
+  border-radius: var(--ny-radius);
+}
+#screen-budget .ny-card[style*="#FFF5F5"] h5 {
+  font-size: var(--ny-text-body-md);
+  font-weight: 800;
+  color: var(--ny-danger);
+  display: flex;
+  align-items: center;
+  gap: var(--ny-space-2);
+}
+
+/* Texte conseil ajusté */
+#screen-budget .text-muted.small {
+  font-size: var(--ny-text-body-sm);
+  color: var(--ny-on-surface-variant) !important;
+  line-height: var(--ny-lh-normal);
+  margin-bottom: var(--ny-space-4);
+}
+
+/* ============================================================
+   9. COMPOSANTS GLOBAUX
+   ============================================================ */
+
+/* --- Cartes standard --- */
+.ny-card {
+  background: var(--ny-surface);
+  border-radius: var(--ny-radius);
+  border: 1px solid var(--ny-outline);
+  box-shadow: var(--ny-shadow-sm);
+  padding: var(--ny-space-4) var(--ny-space-3);
+  margin-bottom: var(--ny-space-4);
+  transition: var(--ny-transition);
+}
+@media (min-width: 576px) {
+  .ny-card {
+    padding: var(--ny-space-6);
+    margin-bottom: var(--ny-space-5);
+  }
+}
+.ny-card:hover {
+  box-shadow: var(--ny-shadow);
+}
+
+/* En-tête de carte */
+.ny-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ny-space-2);
+  margin-bottom: var(--ny-space-4);
+  padding-bottom: var(--ny-space-3);
+  border-bottom: 1px solid var(--ny-outline);
+}
+
+/* --- Boutons --- */
+.ny-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ny-space-2);
+  padding: 12px var(--ny-space-6);
+  border-radius: var(--ny-radius-sm);
+  font-weight: 700;
+  font-size: var(--ny-text-body-md);
+  border: none;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  text-decoration: none;
+  line-height: 1.4;
+  min-height: 44px;       /* Cible tactile */
+  min-width: 44px;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+}
+.ny-btn-block {
+  display: flex;
+  width: 100%;
+}
+.ny-btn-sm {
+  padding: 6px var(--ny-space-3);
+  font-size: var(--ny-text-body-sm);
+  border-radius: var(--ny-radius-sm);
+  min-height: 44px;       /* Toujours 44px même en small */
+}
+
+/* Primaire */
+.ny-btn-primary {
+  background-color: var(--ny-primary);
+  color: var(--ny-on-primary);
+}
+.ny-btn-primary:hover {
+  background-color: var(--ny-primary-hover);
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(0, 45, 122, 0.28);
+  transform: translateY(-1px);
+}
+.ny-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Secondaire */
+.ny-btn-secondary {
+  background-color: var(--ny-secondary);
+  color: var(--ny-on-secondary);
+}
+.ny-btn-secondary:hover {
+  background-color: var(--ny-secondary-hover);
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(16, 185, 130, 0.30);
+  transform: translateY(-1px);
+}
+
+/* Tertiaire (doré) */
+.ny-btn-tertiary {
+  background-color: var(--ny-tertiary);
+  color: var(--ny-on-tertiary);
+}
+.ny-btn-tertiary:hover {
+  background-color: var(--ny-tertiary-hover);
+  color: var(--ny-on-tertiary);
+  transform: translateY(-1px);
+}
+
+/* Outline */
+.ny-btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--ny-primary);
+  color: var(--ny-primary);
+}
+.ny-btn-outline:hover {
+  background-color: var(--ny-primary-container);
+  color: var(--ny-primary);
+}
+
+/* Danger */
+.ny-btn-danger {
+  background-color: var(--ny-danger);
+  color: var(--ny-on-danger);
+}
+.ny-btn-danger:hover {
+  background-color: var(--ny-danger-hover);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  transform: translateY(-1px);
+}
+
+/* --- Champs de formulaire --- */
+.ny-form-group {
+  margin-bottom: var(--ny-space-5);
+}
+.ny-form-control {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px var(--ny-space-4);
+  font-size: var(--ny-text-body-lg);  /* 16px — empêche zoom iOS */
+  font-family: var(--ny-font-body);
+  color: var(--ny-on-surface);
+  background-color: #FFFFFF;
+  border: 1.5px solid var(--ny-outline);
+  border-radius: var(--ny-radius);
+  outline: none;
+  transition: var(--ny-transition);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.ny-form-control::placeholder {
+  color: var(--ny-text-muted);
+  font-size: var(--ny-text-body-md);
+}
+.ny-form-control:hover {
+  border-color: var(--ny-outline-variant);
+}
+.ny-form-control:focus {
+  border-color: var(--ny-primary);
+  box-shadow: 0 0 0 3px rgba(0, 45, 122, 0.10);
+  outline: none;
+}
+/* Select — flèche personnalisée avec le primary */
+select.ny-form-control {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23002D7A' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* --- Quick chips (montants rapides) --- */
+.ny-quick-chip {
+  min-height: 44px;
+  padding: var(--ny-space-2) var(--ny-space-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ny-surface-variant);
+  border: 1.5px solid var(--ny-outline);
+  border-radius: var(--ny-radius-sm);
+  font-size: var(--ny-text-body-sm);
+  font-weight: 700;
+  color: var(--ny-primary);
+  text-align: center;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.1px;
+}
+@media (min-width: 576px) {
+  .ny-quick-chip {
+    padding: 10px var(--ny-space-3);
+  }
+}
+.ny-quick-chip:hover {
+  background: var(--ny-primary-container);
+  border-color: var(--ny-primary);
+}
+.ny-quick-chip.selected {
+  background: var(--ny-primary);
+  color: #FFFFFF;
+  border-color: var(--ny-primary);
+  box-shadow: 0 2px 8px rgba(0, 45, 122, 0.20);
+}
+
+/* ============================================================
+   10. JAUGES ET BARRES DE PROGRESSION
+   ============================================================ */
+.ny-progress-wrap {
+  margin: var(--ny-space-4) 0 var(--ny-space-3) 0;
+}
+@media (min-width: 576px) {
+  .ny-progress-wrap {
+    margin: var(--ny-space-5) 0 var(--ny-space-4) 0;
+  }
+}
+.ny-progress-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.20);
+  border-radius: var(--ny-radius-full);
+  overflow: hidden;
+}
+.ny-progress-bar-fill {
+  height: 100%;
+  border-radius: var(--ny-radius-full);
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ny-progress-bar-fill.fill-green  { background: var(--ny-status-ok); }
+.ny-progress-bar-fill.fill-orange { background: var(--ny-status-warning); }
+.ny-progress-bar-fill.fill-red    { background: var(--ny-status-danger); }
+
+/* Pastilles de statut */
+.ny-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ny-space-1);
+  padding: 5px 12px;
+  border-radius: var(--ny-radius-full);
+  font-size: var(--ny-text-label);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ny-status-pill.status-green  {
+  background: var(--ny-status-ok-bg);
+  color: var(--ny-status-ok);
+  border: 1px solid rgba(22, 163, 74, 0.25);
+}
+.ny-status-pill.status-orange {
+  background: var(--ny-status-warning-bg);
+  color: var(--ny-status-warning);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+.ny-status-pill.status-red {
+  background: var(--ny-status-danger-bg);
+  color: var(--ny-status-danger);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+/* ============================================================
+   11. ÉTATS VIDES / ERREUR / CHARGEMENT
+   ============================================================ */
+
+/* État vide */
+.ny-empty-state {
+  text-align: center;
+  padding: var(--ny-space-12) var(--ny-space-6);
+  color: var(--ny-on-surface-variant);
+}
+.ny-empty-state i {
+  font-size: 3rem;
+  color: var(--ny-outline-variant);
+  margin-bottom: var(--ny-space-4);
+  display: block;
+  opacity: 0.7;
+}
+.ny-empty-state-title {
+  font-family: var(--ny-font-heading);
+  font-size: var(--ny-text-h3);
+  font-weight: 700;
+  color: var(--ny-on-surface-variant);
+  margin-bottom: var(--ny-space-2);
+}
+.ny-empty-state-desc {
+  font-size: var(--ny-text-body-md);
+  color: var(--ny-text-muted);
+  margin-bottom: var(--ny-space-5);
+  line-height: var(--ny-lh-normal);
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* État d'erreur */
+.ny-error-state {
+  background-color: var(--ny-danger-container);
+  border: 1.5px solid rgba(220, 38, 38, 0.3);
+  border-radius: var(--ny-radius);
+  padding: var(--ny-space-4) var(--ny-space-5);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ny-space-3);
+  margin-bottom: var(--ny-space-4);
+}
+.ny-error-state i {
+  color: var(--ny-danger);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ny-error-state-title {
+  font-weight: 700;
+  font-size: var(--ny-text-body-md);
+  color: var(--ny-danger);
+  margin-bottom: var(--ny-space-1);
+}
+.ny-error-state-desc {
+  font-size: var(--ny-text-body-sm);
+  color: var(--ny-on-danger-container);
+  line-height: var(--ny-lh-normal);
+}
+
+/* État de chargement */
+.ny-loading-state {
+  text-align: center;
+  padding: var(--ny-space-12) var(--ny-space-6);
+  color: var(--ny-text-muted);
+  font-size: var(--ny-text-body-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ny-space-3);
+}
+.ny-loading-state .spinner-border {
+  color: var(--ny-primary);
+  width: 28px;
+  height: 28px;
+  border-width: 2.5px;
+}
+
+/* Spinner inline (dans les boutons) */
+.ny-btn .spinner-border {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+/* Chargement inline générique (utilisé dans les listes) */
+.text-center.py-4.text-muted .fa-spinner {
+  color: var(--ny-primary);
+  opacity: 0.7;
+}
+
+/* ============================================================
+   12. TOAST & MODALES
+   ============================================================ */
+
+/* Toast */
+.ny-toast {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: var(--ny-primary);
+  color: #FFFFFF;
+  padding: 12px var(--ny-space-6);
+  border-radius: var(--ny-radius-full);
+  box-shadow: var(--ny-shadow-floating);
+  font-weight: 600;
+  font-size: var(--ny-text-body-md);
+  z-index: 9999;
+  display: none;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  animation: nyToastIn 0.3s ease;
+}
+@keyframes nyToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@media (min-width: 1025px) {
+  .ny-toast {
+    bottom: var(--ny-space-6);
+  }
+}
+
+/* Modale — backdrop */
+.ny-modal-backdrop,
+.ny-1tap-popover {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 27, 73, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 2000;
+  padding: 0;
+}
+.ny-1tap-popover {
+  z-index: 2500;
+}
+/* Centré sur tablette/desktop */
+@media (min-width: 768px) {
+  .ny-modal-backdrop,
+  .ny-1tap-popover {
+    align-items: center;
+    justify-content: center;
+    padding: var(--ny-space-5);
+  }
+}
+
+/* Boîte modale */
+.ny-modal-box,
+.ny-1tap-content {
+  background: #FFFFFF;
+  border-radius: 20px 20px 0 0;
+  max-width: 100%;
+  width: 100%;
+  padding: var(--ny-space-4) var(--ny-space-4);
+  padding-bottom: max(var(--ny-space-6), env(safe-area-inset-bottom, var(--ny-space-6)));
+  box-shadow: var(--ny-shadow-lg);
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: nySlideUpModal 0.25s ease-out;
+}
+@keyframes nySlideUpModal {
+  from { transform: translateY(80px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@media (min-width: 576px) {
+  .ny-modal-box,
+  .ny-1tap-content {
+    padding: var(--ny-space-6) var(--ny-space-5);
+  }
+}
+@media (min-width: 768px) {
+  .ny-modal-box {
+    border-radius: var(--ny-radius-lg);
+    max-width: 500px;
+    animation: nyFadeInModal 0.2s ease-out;
+  }
+  .ny-1tap-content {
+    border-radius: var(--ny-radius-lg);
+    max-width: 480px;
+    animation: nyFadeInModal 0.2s ease-out;
+  }
+}
+@keyframes nyFadeInModal {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* Poignée de drag */
+.ny-modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--ny-outline-variant);
+  border-radius: var(--ny-radius-full);
+  margin: 0 auto var(--ny-space-3) auto;
+  display: block;
+}
+@media (min-width: 768px) {
+  .ny-modal-handle {
+    display: none;
+  }
+}
+
+/* Bouton de fermeture ≥ 44×44 */
+.ny-modal-box .close,
+.ny-1tap-content .close {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1.75rem;
+  opacity: 0.55;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: var(--ny-transition);
+  color: var(--ny-on-surface);
+  border-radius: var(--ny-radius-sm);
+  -webkit-tap-highlight-color: transparent;
+}
+.ny-modal-box .close:hover,
+.ny-1tap-content .close:hover {
+  opacity: 1;
+  background: var(--ny-surface-variant);
+}
+
+/* Titres de modales */
+.ny-modal-box h4[style*="color:var(--ny-primary)"],
+.ny-1tap-content h5[style*="color:var(--ny-primary)"] {
+  font-size: var(--ny-text-h3);
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  color: var(--ny-primary);
+  letter-spacing: -0.2px;
+}
+
+/* Grille chips rapides dans modale */
+.ny-modal-quick-chips {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--ny-space-2);
+  margin-bottom: var(--ny-space-5);
+  width: 100%;
+}
+@media (min-width: 480px) {
+  .ny-modal-quick-chips {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.ny-modal-quick-chip {
+  min-height: 44px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--ny-text-body-sm);
+  border-radius: var(--ny-radius-sm);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Budget initial — modale spéciale */
+#modalInitialBudget.ny-modal-backdrop {
+  z-index: 10000;
+  background: rgba(0, 45, 122, 0.90);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+#modalInitialBudget .ny-modal-box {
+  max-width: 440px;
+  text-align: center;
+}
+#initialModalBudgetAmount {
+  font-size: 1.625rem !important;
+  font-family: var(--ny-font-heading) !important;
+  font-weight: 800 !important;
+  color: var(--ny-primary) !important;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+/* ============================================================
+   13. NAVIGATION
+   ============================================================ */
+
+/* --- SIDEBAR DESKTOP --- */
+@media (min-width: 1025px) {
+  .ny-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    height: 100vh;
+    background: var(--ny-primary);
+    box-shadow: var(--ny-shadow-sm);
+    z-index: 1000;
+    overflow-y: auto;
+  }
+  .ny-header-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: 100%;
+    padding: var(--ny-space-8) var(--ny-space-5) var(--ny-space-6);
+    gap: var(--ny-space-4);
+  }
+  .ny-desktop-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ny-space-1);
+    margin-top: var(--ny-space-3);
+    flex: 1;
+  }
+  .ny-desktop-nav .ny-nav-item {
+    color: rgba(255, 255, 255, 0.80);
+    text-decoration: none;
+    font-size: var(--ny-text-body-md);
+    font-weight: 600;
+    padding: 11px var(--ny-space-4);
+    border-radius: var(--ny-radius-sm);
+    transition: var(--ny-transition);
+    display: flex;
+    align-items: center;
+    gap: var(--ny-space-3);
+    cursor: pointer;
+    letter-spacing: 0.1px;
+  }
+  .ny-desktop-nav .ny-nav-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .ny-desktop-nav .ny-nav-item:hover {
+    background: rgba(255, 255, 255, 0.10);
+    color: #FFFFFF;
+    transform: translateX(2px);
+  }
+  .ny-desktop-nav .ny-nav-item.active {
+    background: var(--ny-secondary);
+    color: #FFFFFF;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(16, 185, 130, 0.30);
+  }
+  .ny-header-actions {
+    margin-top: auto;
+    padding-top: var(--ny-space-4);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ny-space-2);
+  }
+  .ny-user-chip {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.09);
+    border-radius: var(--ny-radius-full);
+    padding: var(--ny-space-1) var(--ny-space-3);
+    font-size: var(--ny-text-body-sm);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: var(--ny-space-2);
+  }
+  #userDisplayName {
+    display: inline !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+  #connectionBanner {
+    margin-left: 260px;
+  }
+}
+
+/* Logo-texte dans la sidebar */
+.ny-brand-logo-text {
+  font-family: var(--ny-font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.ny-brand-logo-text .ny-part-nye { color: #FFFFFF; }
+.ny-brand-logo-text .ny-part-ga  { color: var(--ny-secondary); }
+
+.ny-brand-tagline {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.60);
+  display: none;
+}
+@media (min-width: 576px) {
+  .ny-brand-tagline {
+    display: inline-block;
+    border-left: 1px solid rgba(255, 255, 255, 0.18);
+    padding-left: var(--ny-space-3);
+    margin-left: var(--ny-space-3);
+  }
+}
+@media (min-width: 1025px) {
+  .ny-brand-tagline {
+    display: block;
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+  }
+}
+
+/* Bouton déconnexion */
+.ny-btn-logout {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  padding: var(--ny-space-1) var(--ny-space-3);
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ny-radius-sm);
+  font-size: var(--ny-text-body-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  flex-shrink: 0;
+}
+.ny-btn-logout:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #FFFFFF;
+}
+
+/* Avatar utilisateur */
+.ny-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ny-secondary);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--ny-text-body-sm);
+  flex-shrink: 0;
+}
+
+/* --- BOTTOM NAV MOBILE --- */
+.ny-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #FFFFFF;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.07), 0 -1px 0 var(--ny-outline);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 1000;
+}
+@media (min-width: 1025px) {
+  .ny-bottom-nav {
+    display: none !important;
+  }
+}
+
+.ny-bottom-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;  /* Cible tactile */
+  min-width: 0;
+  padding: var(--ny-space-1) 2px;
+  color: var(--ny-on-surface-variant);
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--ny-transition);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.2px;
+}
+.ny-bottom-tab span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-top: 2px;
+}
+.ny-bottom-tab i {
+  font-size: 1.125rem;
+  margin-bottom: 2px;
+  transition: var(--ny-transition);
+}
+.ny-bottom-tab:hover,
+.ny-bottom-tab.active {
+  color: var(--ny-primary);
+}
+.ny-bottom-tab.active i {
+  transform: scale(1.15);
+  color: var(--ny-primary);
+}
+
+/* Bouton central (+) */
+.ny-bottom-tab.ny-tab-add .ny-add-icon-bubble {
+  width: 46px;
+  height: 46px;
+  background: var(--ny-primary);
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 14px rgba(0, 45, 122, 0.32);
+  margin-top: -18px;
+  transition: var(--ny-transition);
+}
+.ny-bottom-tab.ny-tab-add.active .ny-add-icon-bubble,
+.ny-bottom-tab.ny-tab-add:hover .ny-add-icon-bubble {
+  background: var(--ny-secondary);
+  transform: scale(1.07);
+}
+
+/* ============================================================
+   14. PREFERS-REDUCED-MOTION (renfort)
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Désactive les transformations de survol */
+  .ny-btn:hover,
+  .ny-quick-chip:hover,
+  .ny-auto-category-pill:hover,
+  .ny-bottom-tab.active i,
+  .ny-desktop-nav .ny-nav-item:hover,
+  .ny-budget-remaining-amount,
+  .ny-daily-card:hover,
+  .ny-expense-item:hover,
+  .ny-stat-box:hover {
+    transform: none !important;
+  }
+  /* Désactive les animations de modales */
+  .ny-modal-box,
+  .ny-1tap-content {
+    animation: none !important;
+  }
+  /* La jauge n'anime pas */
+  .ny-progress-bar-fill {
+    transition: none !important;
+  }
+  /* Spinner garde son animation réduite */
+  .spinner-border {
+    animation-duration: 0.8s !important;
+  }
+}
+
+/* ============================================================
+   15. CIBLES TACTILES ≥ 44 px (audit)
+   Tout élément interactif doit être ≥ 44×44px.
+   ============================================================ */
+button,
+[role="button"],
+a,
+input,
+select,
+textarea,
+label[for] {
+  /* Pas de min-height global pour ne pas casser la mise en page.
+     Appliquer manuellement aux composants. */
+}
+
+/* Override Bootstrap : boutons outline restent dans les tokens */
+.btn-outline-primary {
+  color: var(--ny-primary) !important;
+  border-color: var(--ny-primary) !important;
+  background-color: transparent !important;
+  min-height: 44px;
+  font-weight: 600;
+  border-radius: var(--ny-radius-sm);
+  font-size: var(--ny-text-body-sm);
+  transition: var(--ny-transition);
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: var(--ny-primary-container) !important;
+  color: var(--ny-primary) !important;
+  border-color: var(--ny-primary) !important;
+}
+
+/* Bootstrap btn-sm dans les modales/auth — cible 44px */
+.btn.btn-sm {
+  min-height: 44px;
+  padding: 8px var(--ny-space-3);
+  font-size: var(--ny-text-body-sm);
+  border-radius: var(--ny-radius-sm);
+}
+
+/* btn-danger bootstrap (suppression compte) */
+.btn.btn-danger {
+  min-height: 44px;
+  background-color: var(--ny-danger);
+  border-color: var(--ny-danger);
+  color: var(--ny-on-danger);
+  font-weight: 700;
+  border-radius: var(--ny-radius-sm);
+  transition: var(--ny-transition);
+}
+.btn.btn-danger:hover {
+  background-color: var(--ny-danger-hover);
+  border-color: var(--ny-danger-hover);
+}
+
+/* btn-outline-secondary bootstrap */
+.btn.btn-outline-secondary {
+  min-height: 44px;
+  color: var(--ny-on-surface-variant);
+  border-color: var(--ny-outline-variant);
+  border-radius: var(--ny-radius-sm);
+  font-size: var(--ny-text-body-sm);
+  font-weight: 600;
+  transition: var(--ny-transition);
+}
+.btn.btn-outline-secondary:hover {
+  background-color: var(--ny-surface-variant);
+  border-color: var(--ny-outline-variant);
+  color: var(--ny-on-surface);
+}
+
+/* btn-link bootstrap (définir plus tard) */
+.btn.btn-link {
+  min-height: 44px;
+  color: var(--ny-on-surface-variant);
+  font-size: var(--ny-text-body-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.btn.btn-link:hover {
+  color: var(--ny-primary);
+}
+
+/* Sélecteur de catégorie 1-tap — items ≥ 48px */
+.ny-1tap-item {
+  min-height: 52px;
+  padding: var(--ny-space-3) var(--ny-space-4);
+  border-radius: var(--ny-radius);
+  border: 1px solid var(--ny-outline);
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: var(--ny-space-4);
+  cursor: pointer;
+  transition: var(--ny-transition);
+  text-align: left;
+  width: 100%;
+}
+.ny-1tap-item:hover,
+.ny-1tap-item:active {
+  background: var(--ny-surface-variant);
+  border-color: var(--ny-primary);
+  transform: translateX(3px);
+}
+.ny-1tap-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+.ny-1tap-name {
+  font-weight: 700;
+  font-size: var(--ny-text-body-md);
+  color: var(--ny-primary);
+}
+
+/* Grille sélecteur de catégorie étendu */
+.ny-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--ny-space-3);
+  margin-bottom: var(--ny-space-5);
+}
+.ny-category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--ny-space-4) var(--ny-space-2);
+  background: #FFFFFF;
+  border: 2px solid var(--ny-outline);
+  border-radius: var(--ny-radius);
+  cursor: pointer;
+  transition: var(--ny-transition);
+  text-align: center;
+  min-height: 80px;
+}
+.ny-category-item:hover {
+  border-color: var(--ny-secondary);
+  background: var(--ny-secondary-container);
+}
+.ny-category-item.selected {
+  border-color: var(--ny-primary);
+  background: var(--ny-primary-container);
+  box-shadow: 0 4px 12px rgba(0, 45, 122, 0.13);
+}
+.ny-cat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ny-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  margin-bottom: var(--ny-space-2);
+  color: var(--ny-primary);
+}
+.ny-category-item.selected .ny-cat-icon {
+  background: var(--ny-primary);
+  color: #FFFFFF;
+}
+.ny-cat-name {
+  font-size: var(--ny-text-caption);
+  font-weight: 700;
+  color: var(--ny-on-surface);
+}
+
+/* Alerte globale */
+.ny-alert {
+  padding: var(--ny-space-3) var(--ny-space-4);
+  border-radius: var(--ny-radius-sm);
+  font-size: var(--ny-text-body-md);
+  margin-bottom: var(--ny-space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--ny-space-2);
+  line-height: var(--ny-lh-normal);
+}
+.ny-alert-danger {
+  background-color: var(--ny-danger-container);
+  color: var(--ny-on-danger-container);
+  border: 1px solid rgba(220, 38, 38, 0.20);
+}
+.ny-alert-success {
+  background-color: var(--ny-secondary-container);
+  color: var(--ny-on-secondary-container);
+  border: 1px solid rgba(16, 185, 130, 0.20);
+}
+.ny-alert-warning {
+  background-color: var(--ny-tertiary-container);
+  color: var(--ny-on-tertiary-container);
+  border: 1px solid rgba(251, 180, 24, 0.30);
+}
+
+/* Transitions de screens */
+.ny-screen {
+  display: none;
+  animation: nyScreenIn 0.25s ease-out;
+}
+.ny-screen.active {
+  display: block;
+}
+@keyframes nyScreenIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Bannière indicateur décalée sidebar */
+@media (min-width: 1025px) {
+  #connectionBanner {
+    margin-left: 260px;
+  }
+}
+
+/* Taille de carte max sur desktop pour ajout/budget */
+@media (min-width: 1025px) {
+  #screen-ajout .ny-card,
+  #screen-budget .ny-card {
+    max-width: 860px;
+  }
+}
