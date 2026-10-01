@@ -16,16 +16,28 @@
 /* Container responsive mobile-first */
 .ny-main-container {
   width: 100%;
-  max-width: 900px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 20px 16px 100px 16px; /* 100px bottom padding for mobile navbar */
+  padding: 16px 16px calc(88px + env(safe-area-inset-bottom, 16px)) 16px; /* Safe-area mobile navbar */
   flex: 1;
 }
 
-@media (min-width: 992px) {
+/* Tablette (768px à 1024px) */
+@media (min-width: 768px) {
   .ny-main-container {
-    padding-top: 30px;
-    padding-bottom: 50px;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 20px calc(88px + env(safe-area-inset-bottom, 16px)) 20px;
+  }
+}
+
+/* Desktop (> 1024px) */
+@media (min-width: 1025px) {
+  .ny-main-container {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    max-width: calc(100% - 260px);
+    padding: 36px 40px;
   }
 }
 
@@ -39,6 +51,7 @@
   top: 0;
   z-index: 1000;
   box-shadow: var(--ny-shadow-sm);
+  padding-top: max(0px, env(safe-area-inset-top, 0px));
 }
 
 .ny-header-inner {
@@ -124,8 +137,13 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: #FFFFFF;
   padding: 6px 14px;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--ny-radius-sm);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: var(--ny-transition);
@@ -137,41 +155,120 @@
   border-color: #FFFFFF;
 }
 
-/* Desktop Navigation Links */
+/* Desktop Navigation (Transformée en Sidebar latérale fixe à gauche > 1024px) */
 .ny-desktop-nav {
   display: none;
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1025px) {
+  .ny-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    height: 100vh;
+    padding: 0;
+    background: var(--ny-primary);
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+    overflow-y: auto;
+  }
+
+  .ny-header-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: 100%;
+    min-height: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 28px 20px 24px 20px;
+    gap: 16px;
+  }
+
+  .ny-brand-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .ny-brand-tagline {
+    display: block !important;
+    border-left: none !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
   .ny-desktop-nav {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    margin-top: 12px;
+    flex: 1;
   }
 
   .ny-desktop-nav .ny-nav-item {
     color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
-    padding: 8px 16px;
+    padding: 12px 16px;
     border-radius: var(--ny-radius-sm);
     transition: var(--ny-transition);
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     cursor: pointer;
   }
 
-  .ny-desktop-nav .ny-nav-item:hover,
-  .ny-desktop-nav .ny-nav-item.active {
-    background: rgba(255, 255, 255, 0.16);
+  .ny-desktop-nav .ny-nav-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+  }
+
+  .ny-desktop-nav .ny-nav-item:hover {
+    background: rgba(255, 255, 255, 0.12);
     color: #FFFFFF;
+    transform: translateX(3px);
   }
 
   .ny-desktop-nav .ny-nav-item.active {
     background: var(--ny-secondary);
     color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(16, 185, 130, 0.35);
+  }
+
+  /* Profil utilisateur et Déconnexion ancrés en bas de la sidebar */
+  .ny-header-actions {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .ny-user-chip {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  #userDisplayName {
+    display: inline !important;
+  }
+
+  /* Bannière indicateur calée à droite de la sidebar */
+  #connectionBanner {
+    margin-left: 260px;
   }
 }
 
@@ -183,7 +280,10 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 68px;
+  height: calc(68px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   background: #FFFFFF;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
   display: flex;
@@ -193,9 +293,9 @@
   border-top: 1px solid var(--ny-outline);
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1025px) {
   .ny-bottom-nav {
-    display: none; /* Cache sur grand écran car navigation supérieure active */
+    display: none !important;
   }
 }
 
@@ -205,6 +305,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 48px;
+  min-width: 44px;
   padding: 6px 0;
   color: var(--ny-on-surface-variant);
   text-decoration: none;
@@ -316,8 +418,32 @@
 }
 
 /* ==========================================================
-   HERO / MAIN BUDGET CARD (ACCUEIL)
+   HERO / MAIN BUDGET CARD & ACCUEIL 2-COL LAYOUT
    ========================================================== */
+.ny-home-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1025px) {
+  .ny-home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .ny-home-col-primary,
+  .ny-home-col-secondary {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ny-home-col-secondary .ny-card {
+    margin-bottom: 0;
+  }
+}
+
 .ny-budget-hero-card {
   background: linear-gradient(135deg, var(--ny-primary) 0%, #001B49 100%);
   color: #FFFFFF;
@@ -631,6 +757,7 @@
 
 .ny-form-control {
   width: 100%;
+  min-height: 44px;
   padding: 12px 16px;
   font-size: 15px;
   font-family: var(--ny-font-body);
@@ -665,10 +792,22 @@
   margin-bottom: 20px;
 }
 
+@media (min-width: 768px) {
+  .ny-quick-amounts {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+}
+
 .ny-quick-chip {
   flex: 1;
   min-width: 60px;
+  min-height: 44px;
   padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--ny-surface-variant);
   border: 1px solid var(--ny-outline);
   border-radius: var(--ny-radius-sm);
@@ -709,6 +848,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
   padding: 8px 16px;
   border-radius: var(--ny-radius-full);
   font-size: 14px;
@@ -756,25 +896,29 @@
   justify-content: center;
 }
 
-@media (min-width: 576px) {
-  .ny-1tap-popover {
-    align-items: center;
-  }
-}
-
 .ny-1tap-content {
   background: #FFFFFF;
   width: 100%;
-  max-width: 480px;
+  max-width: 100%;
   border-radius: 20px 20px 0 0;
-  padding: 24px;
+  padding: 20px 20px max(24px, env(safe-area-inset-bottom, 24px)) 20px;
   box-shadow: var(--ny-shadow-lg);
+  max-height: 85vh;
+  overflow-y: auto;
   animation: nySlideUp 0.25s ease-out;
 }
 
-@media (min-width: 576px) {
+@media (min-width: 768px) {
+  .ny-1tap-popover {
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
   .ny-1tap-content {
     border-radius: var(--ny-radius-lg);
+    max-width: 480px;
+    animation: nyFadeIn 0.2s ease-out;
   }
 }
 
@@ -794,6 +938,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  min-height: 48px;
   padding: 12px 16px;
   border-radius: var(--ny-radius);
   border: 1px solid var(--ny-outline);
@@ -893,6 +1038,18 @@
   margin-bottom: 20px;
 }
 
+@media (min-width: 768px) {
+  .ny-history-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .ny-filter-select {
+    min-width: 0;
+  }
+}
+
 .ny-filter-select {
   flex: 1;
   min-width: 150px;
@@ -971,8 +1128,10 @@
 }
 
 .ny-icon-btn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: var(--ny-radius-sm);
   border: 1px solid var(--ny-outline);
   background: #FFFFFF;
@@ -982,7 +1141,7 @@
   justify-content: center;
   cursor: pointer;
   transition: var(--ny-transition);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .ny-icon-btn:hover {
@@ -1000,6 +1159,42 @@
 /* ==========================================================
    ANALYTICS SCREEN
    ========================================================== */
+.ny-analytics-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1025px) {
+  .ny-analytics-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .ny-analytics-chart-col {
+    background: var(--ny-surface-variant);
+    border: 1px solid var(--ny-outline);
+    border-radius: var(--ny-radius);
+    padding: 20px;
+  }
+
+  .ny-analytics-chart-col .ny-chart-wrapper {
+    height: 380px;
+    margin: 0;
+  }
+
+  .ny-analytics-details-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #screen-ajout .ny-card,
+  #screen-budget .ny-card {
+    max-width: 860px;
+  }
+}
+
 .ny-chart-wrapper {
   position: relative;
   height: 280px;
@@ -1155,19 +1350,92 @@
   background: rgba(0, 27, 73, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* Bottom sheet on mobile */
   justify-content: center;
   z-index: 2000;
-  padding: 20px;
+  padding: 0;
 }
 
 .ny-modal-box {
   background: #FFFFFF;
-  border-radius: var(--ny-radius-lg);
-  max-width: 500px;
+  border-radius: 20px 20px 0 0; /* Rounded top on mobile */
+  max-width: 100%;
   width: 100%;
-  padding: 28px;
+  padding: 20px 20px max(24px, env(safe-area-inset-bottom, 24px)) 20px;
   box-shadow: var(--ny-shadow-lg);
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: nySlideUp 0.25s ease-out;
+}
+
+/* Poignée de drag mobile */
+.ny-modal-handle {
+  width: 40px;
+  height: 4px;
+  background: #CBD5E1;
+  border-radius: var(--ny-radius-full);
+  margin: 0 auto 16px auto;
+  display: block;
+}
+
+/* Boutons de fermeture modales tactiles >= 44x44px */
+.ny-modal-box .close,
+.ny-1tap-content .close {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 28px;
+  opacity: 0.6;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: var(--ny-transition);
+}
+
+.ny-modal-box .close:hover,
+.ny-1tap-content .close:hover {
+  opacity: 1;
+}
+
+/* Puces de montant dans la modale budget initial (>= 44x44px) */
+.ny-modal-quick-chip {
+  min-height: 44px;
+  min-width: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: var(--ny-radius-sm);
+}
+
+/* Pastilles de catégorie cliquables dans les listes de dépenses */
+.ny-expense-item .badge[onclick] {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+}
+
+@media (min-width: 768px) {
+  .ny-modal-backdrop {
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .ny-modal-box {
+    border-radius: var(--ny-radius-lg);
+    max-width: 500px;
+    padding: 28px;
+    animation: nyFadeIn 0.2s ease-out;
+  }
+
+  .ny-modal-handle {
+    display: none;
+  }
 }
 
 .ny-empty-state {

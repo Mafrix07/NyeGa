@@ -84,65 +84,72 @@
          ======================================================== -->
     <section id="screen-accueil" class="ny-screen active">
 
-      <!-- Carte Principale : Budget Disponible & Statut -->
-      <div class="ny-budget-hero-card">
-        <div class="ny-budget-hero-top">
-          <div>
-            <div class="ny-budget-hero-label">Budget restant disponible</div>
-            <div class="ny-budget-remaining-amount" id="homeRemainingAmount">-- FCFA</div>
+      <div class="ny-home-grid">
+        <!-- Colonne 1 : Budget disponible, Jauge & Budget journalier -->
+        <div class="ny-home-col-primary">
+          <!-- Carte Principale : Budget Disponible & Statut -->
+          <div class="ny-budget-hero-card">
+            <div class="ny-budget-hero-top">
+              <div>
+                <div class="ny-budget-hero-label">Budget restant disponible</div>
+                <div class="ny-budget-remaining-amount" id="homeRemainingAmount">-- FCFA</div>
+              </div>
+              <!-- Indicateur de Statut Vert / Orange / Rouge -->
+              <div class="ny-status-pill status-green" id="homeStatusPill">
+                <i class="fa fa-circle" id="homeStatusIcon"></i>
+                <span id="homeStatusText">Budget Sain</span>
+              </div>
+            </div>
+
+            <!-- Jauge visuelle de consommation -->
+            <div class="ny-progress-wrap">
+              <div class="ny-progress-labels">
+                <span>Dépensé : <strong id="homeSpentAmount">-- FCFA</strong></span>
+                <span>Budget total : <strong id="homeTotalBudget">-- FCFA</strong></span>
+              </div>
+              <div class="ny-progress-bar-bg">
+                <div class="ny-progress-bar-fill fill-green" id="homeProgressBar" style="width: 0%;"></div>
+              </div>
+            </div>
           </div>
-          <!-- Indicateur de Statut Vert / Orange / Rouge -->
-          <div class="ny-status-pill status-green" id="homeStatusPill">
-            <i class="fa fa-circle" id="homeStatusIcon"></i>
-            <span id="homeStatusText">Budget Sain</span>
+
+          <!-- Carte Budget Journalier Recommandé (Calculé) -->
+          <div class="ny-daily-card">
+            <div class="ny-daily-left">
+              <div class="ny-daily-icon">
+                <i class="fa fa-calendar-check-o"></i>
+              </div>
+              <div>
+                <div class="ny-daily-title">Budget journalier conseillé</div>
+                <div class="ny-daily-amount" id="homeDailyAmount">-- FCFA / jour</div>
+              </div>
+            </div>
+            <div class="ny-daily-right">
+              <div><strong id="homeDaysLeft">--</strong> jours restants</div>
+              <span class="small text-muted" id="homePeriodEnd">Jusqu'au --</span>
+            </div>
           </div>
         </div>
 
-        <!-- Jauge visuelle de consommation -->
-        <div class="ny-progress-wrap">
-          <div class="ny-progress-labels">
-            <span>Dépensé : <strong id="homeSpentAmount">-- FCFA</strong></span>
-            <span>Budget total : <strong id="homeTotalBudget">-- FCFA</strong></span>
+        <!-- Colonne 2 : Résumé Dépenses Récentes -->
+        <div class="ny-home-col-secondary">
+          <div class="ny-card">
+            <div class="ny-card-header">
+              <h2 class="ny-card-title"><i class="fa fa-clock-o"></i> Dernières Dépenses</h2>
+              <button type="button" class="ny-btn ny-btn-primary ny-btn-sm" onclick="navigateToScreen('ajout')">
+                <i class="fa fa-plus"></i> Ajouter
+              </button>
+            </div>
+            <div id="homeRecentExpensesList" class="ny-expense-list">
+              <!-- Chargement dynamique -->
+              <div class="text-center py-4 text-muted"><i class="fa fa-spinner fa-spin mr-2"></i> Chargement des dépenses...</div>
+            </div>
+            <div class="text-center mt-3">
+              <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="navigateToScreen('historique')">
+                Voir tout l'historique <i class="fa fa-arrow-right ml-1"></i>
+              </button>
+            </div>
           </div>
-          <div class="ny-progress-bar-bg">
-            <div class="ny-progress-bar-fill fill-green" id="homeProgressBar" style="width: 0%;"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Carte Budget Journalier Recommandé (Calculé) -->
-      <div class="ny-daily-card">
-        <div class="ny-daily-left">
-          <div class="ny-daily-icon">
-            <i class="fa fa-calendar-check-o"></i>
-          </div>
-          <div>
-            <div class="ny-daily-title">Budget journalier conseillé</div>
-            <div class="ny-daily-amount" id="homeDailyAmount">-- FCFA / jour</div>
-          </div>
-        </div>
-        <div class="ny-daily-right">
-          <div><strong id="homeDaysLeft">--</strong> jours restants</div>
-          <span class="small text-muted" id="homePeriodEnd">Jusqu'au --</span>
-        </div>
-      </div>
-
-      <!-- Résumé Dépenses Récentes -->
-      <div class="ny-card">
-        <div class="ny-card-header">
-          <h2 class="ny-card-title"><i class="fa fa-clock-o"></i> Dernières Dépenses</h2>
-          <button type="button" class="ny-btn ny-btn-primary ny-btn-sm" onclick="navigateToScreen('ajout')">
-            <i class="fa fa-plus"></i> Ajouter
-          </button>
-        </div>
-        <div id="homeRecentExpensesList" class="ny-expense-list">
-          <!-- Chargement dynamique -->
-          <div class="text-center py-4 text-muted"><i class="fa fa-spinner fa-spin mr-2"></i> Chargement des dépenses...</div>
-        </div>
-        <div class="text-center mt-3">
-          <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="navigateToScreen('historique')">
-            Voir tout l'historique <i class="fa fa-arrow-right ml-1"></i>
-          </button>
         </div>
       </div>
 
@@ -282,42 +289,49 @@
           <h2 class="ny-card-title"><i class="fa fa-pie-chart"></i> Répartition par Catégorie</h2>
         </div>
 
-        <!-- Graphique Chart.js interactif -->
-        <div class="ny-chart-wrapper">
-          <canvas id="categoryDonutChart"></canvas>
-        </div>
+        <div class="ny-analytics-grid">
+          <!-- Colonne 1 : Graphique Donut Chart.js agrandi -->
+          <div class="ny-analytics-chart-col">
+            <div class="ny-chart-wrapper">
+              <canvas id="categoryDonutChart"></canvas>
+            </div>
+          </div>
 
-        <!-- Chiffres clés de l'analyse -->
-        <div class="ny-analytics-summary mt-4">
-          <div class="ny-stat-box">
-            <div class="ny-stat-box-label">Dépense moyenne / jour</div>
-            <div class="ny-stat-box-value" id="statsAvgPerDay">-- FCFA</div>
-          </div>
-          <div class="ny-stat-box">
-            <div class="ny-stat-box-label">Poste de dépense principal</div>
-            <div class="ny-stat-box-value" id="statsTopCategory">--</div>
-          </div>
-          <div class="ny-stat-box">
-            <div class="ny-stat-box-label">Plus grosse dépense</div>
-            <div class="ny-stat-box-value text-danger" id="statsMaxExpense">-- FCFA</div>
-          </div>
-        </div>
+          <!-- Colonne 2 : Chiffres clés et tableau détaillé -->
+          <div class="ny-analytics-details-col">
+            <!-- Chiffres clés de l'analyse -->
+            <div class="ny-analytics-summary">
+              <div class="ny-stat-box">
+                <div class="ny-stat-box-label">Dépense moyenne / jour</div>
+                <div class="ny-stat-box-value" id="statsAvgPerDay">-- FCFA</div>
+              </div>
+              <div class="ny-stat-box">
+                <div class="ny-stat-box-label">Poste de dépense principal</div>
+                <div class="ny-stat-box-value" id="statsTopCategory">--</div>
+              </div>
+              <div class="ny-stat-box">
+                <div class="ny-stat-box-label">Plus grosse dépense</div>
+                <div class="ny-stat-box-value text-danger" id="statsMaxExpense">-- FCFA</div>
+              </div>
+            </div>
 
-        <!-- Tableau détaillé de ventilation -->
-        <h5 class="font-weight-bold mb-3" style="color:var(--ny-primary);">Détail des dépenses en FCFA</h5>
-        <div class="table-responsive">
-          <table class="ny-breakdown-table">
-            <thead>
-              <tr>
-                <th>Catégorie</th>
-                <th>Montant</th>
-                <th>Part</th>
-              </tr>
-            </thead>
-            <tbody id="analyticsTableBody">
-              <!-- Rempli dynamiquement -->
-            </tbody>
-          </table>
+            <!-- Tableau détaillé de ventilation -->
+            <h5 class="font-weight-bold mb-3" style="color:var(--ny-primary);">Détail des dépenses en FCFA</h5>
+            <div class="table-responsive">
+              <table class="ny-breakdown-table">
+                <thead>
+                  <tr>
+                    <th>Catégorie</th>
+                    <th>Montant</th>
+                    <th>Part</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsTableBody">
+                  <!-- Rempli dynamiquement -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -426,6 +440,7 @@
        ========================================================== -->
   <div id="modal1TapCategory" class="ny-1tap-popover" style="display:none;" onclick="if(event.target===this)close1TapCategoryPicker()">
     <div class="ny-1tap-content">
+      <div class="ny-modal-handle"></div>
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h5 class="m-0 font-weight-bold" style="color:var(--ny-primary);">
           <i class="fa fa-hand-pointer-o mr-1"></i> Choisir la catégorie (1 tap)
@@ -446,6 +461,7 @@
        ========================================================== -->
   <div id="modalEditExpense" class="ny-modal-backdrop" style="display:none;">
     <div class="ny-modal-box">
+      <div class="ny-modal-handle"></div>
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="m-0 font-weight-bold" style="color:var(--ny-primary);"><i class="fa fa-pencil"></i> Modifier la dépense</h4>
         <button type="button" class="close" onclick="closeEditModal()">&times;</button>
@@ -479,6 +495,7 @@
   <!-- MODALE CONFIGURATION SUPABASE -->
   <div id="configModal" class="ny-modal-backdrop" style="display:none;">
     <div class="ny-modal-box">
+      <div class="ny-modal-handle"></div>
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="m-0 font-weight-bold" style="color:var(--ny-primary);"><i class="fa fa-database"></i> Paramètres Supabase</h4>
         <button type="button" class="close" onclick="closeConfigModal()">&times;</button>
@@ -503,6 +520,7 @@
   <!-- MODALE DE SAISIE DU BUDGET INITIAL (Demandé à l'étudiant dès son arrivée) -->
   <div id="modalInitialBudget" class="ny-modal-backdrop" style="display:none; z-index:10000; background:rgba(0, 45, 122, 0.85); backdrop-filter:blur(4px);">
     <div class="ny-modal-box text-center" style="max-width:440px;">
+      <div class="ny-modal-handle"></div>
       <div class="d-flex justify-content-end mb-1">
         <button type="button" class="close" title="Fermer la fenêtre du budget" onclick="closeInitialBudgetModal()" style="font-size:24px; color:var(--ny-primary);">&times;</button>
       </div>
@@ -521,10 +539,10 @@
           <small class="text-muted d-block mt-1">Montant mensuel en FCFA</small>
         </div>
         <div class="d-flex justify-content-center flex-wrap mb-4" style="gap:8px;">
-          <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalQuickBudget(30000)">30 000 F</button>
-          <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalQuickBudget(50000)">50 000 F</button>
-          <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalQuickBudget(75000)">75 000 F</button>
-          <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalQuickBudget(100000)">100 000 F</button>
+          <button type="button" class="btn btn-sm btn-outline-primary ny-modal-quick-chip" onclick="setModalQuickBudget(30000)">30 000 F</button>
+          <button type="button" class="btn btn-sm btn-outline-primary ny-modal-quick-chip" onclick="setModalQuickBudget(50000)">50 000 F</button>
+          <button type="button" class="btn btn-sm btn-outline-primary ny-modal-quick-chip" onclick="setModalQuickBudget(75000)">75 000 F</button>
+          <button type="button" class="btn btn-sm btn-outline-primary ny-modal-quick-chip" onclick="setModalQuickBudget(100000)">100 000 F</button>
         </div>
         <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" id="btnModalInitialBudgetSubmit">
           <span class="btn-text"><i class="fa fa-check mr-2"></i> Valider mon budget et démarrer</span>

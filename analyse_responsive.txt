@@ -1,0 +1,158 @@
+================================================================================
+FICHE D'ANALYSE TECHNIQUE POUR LA GÉNÉRATION DU PROMPT RESPONSIVE DESIGN (NYEGA)
+================================================================================
+Date : 01/10/2026
+Projet : NyeGa — Gestion de budget pour étudiants togolais (Devise : FCFA)
+Dossier du projet : C:\Users\DELL\Documents\NyeGa
+
+Ce document contient toutes les informations techniques nécessaires pour qu'une IA
+puisse rédiger un prompt parfait, précis et sans ambiguïté à destination de l'assistant de code.
+
+--------------------------------------------------------------------------------
+1. ÉTAT DES LIEUX DE L'ARCHITECTURE TECHNIQUE
+--------------------------------------------------------------------------------
+
+Le projet NyeGa est structuré de façon modulaire sous le dossier `nyega-web/` :
+
+- nyega-web/index.html :
+  * Page principale contenant les écrans 2 à 6 (Accueil, Ajout, Historique, Analyse, Budget).
+  * Structure du DOM :
+    - <header class="ny-header"> : En-tête avec logo texte ("NyeGa"), barre de navigation desktop (.ny-desktop-nav) et chip utilisateur (.ny-user-chip).
+    - <main class="ny-main-container"> : Conteneur principal englobant tous les écrans.
+    - Écrans : balises <section id="screen-[nom]" class="ny-screen">. Un seul écran actif à la fois (classe .active).
+    - <nav class="ny-bottom-nav"> : Barre de navigation mobile en bas avec 5 onglets (.ny-bottom-tab) et bouton central surélevé (.ny-tab-add).
+    - Modales intégrées dans le HTML :
+      * #modal1TapCategory (.ny-1tap-popover) : Correction instantanée en 1 tap.
+      * #modalEditExpense (.ny-modal-backdrop) : Modification d'une dépense.
+      * #configModal (.ny-modal-backdrop) : Paramètres Supabase (mode dev).
+      * #modalInitialBudget (.ny-modal-backdrop) : Onboarding budget initial.
+
+- nyega-web/css/nyega-theme.css :
+  * Centralise les variables CSS (Tokens) :
+    - --ny-primary: #002D7A (Bleu Marine)
+    - --ny-secondary: #10B982 (Vert Teal)
+    - --ny-tertiary: #FBB418 (Doré)
+    - --ny-danger: #DC2626 (Rouge alerte)
+    - --ny-background: #F8FAFC, --ny-surface: #FFFFFF
+    - Typographies actuelles du template : 'Nunito' (titres) et 'DM Sans' (corps)
+      *(Note : le prompt précédent demandait Plus Jakarta Sans, à clarifier si l'utilisateur souhaite changer la police ou garder celle du thème).*
+
+- nyega-web/css/nyega-app.css (1 184 lignes) :
+  * Gère actuellement toute la mise en page, cartes (.ny-card), héro budget (.ny-budget-hero-card), formulaires, boutons, jauge de progression, filtres, modales et media queries.
+  * Comportement responsive actuel :
+    - Mobile : .ny-main-container a un padding-bottom de 100px pour laisser la place à la barre du bas.
+    - Desktop (min-width: 992px) : la barre mobile .ny-bottom-nav est masquée (display: none) et la barre d'en-tête .ny-desktop-nav s'affiche.
+
+- nyega-web/js/app.js & supabase-client.js :
+  * Contrôleurs JS dynamiques connectés à Supabase avec authentification réelle.
+  * Fonctions critiques liées au DOM :
+    - navigateToScreen(screenId) : bascule de classes .active sur les sections et onglets.
+    - updateDashboard() : recalcule les montants FCFA, jauge et pastille de statut.
+    - open1TapCategoryPicker() / close1TapCategoryPicker() : gestion de la feuille 1-tap.
+    - loadHistoryExpenses() : rendu de la liste complète avec filtres.
+    - renderAnalytics() : mise à jour du graphique Chart.js donut (#categoryDonutChart).
+
+--------------------------------------------------------------------------------
+2. CE QUI MANQUE ACTUELLEMENT (LES DÉFAUTS À CORRIGER)
+--------------------------------------------------------------------------------
+
+1. Sur Mobile (< 768px) :
+   - Les zones tactiles (boutons, puces de montants rapides, filtres) doivent être rigoureusement vérifiées pour garantir au moins 44x44px.
+   - Les safe areas (encoches iPhone et barres de navigation Android) doivent utiliser les variables CSS env(safe-area-inset-*).
+   - Les modales doivent systématiquement adopter le comportement de "Bottom Sheet" (remonter du bas avec arrondi supérieur et poignée).
+
+2. Sur Tablette (768px à 1024px) :
+   - Le contenu dans .ny-main-container peut paraître flottant ou trop étiré si la largeur n'est pas bornée proprement (max-width centré à ~780px).
+   - L'écran Accueil pourrait disposer côte à côte ou en 2 colonnes la carte budget héroïque et les dépenses récentes.
+
+3. Sur Desktop (> 1024px) :
+   - Deux choix d'ergonomie sont possibles et doivent être tranchés dans le prompt :
+     * Option A : Conserver l'en-tête horizontal supérieur (.ny-desktop-nav) mais réorganiser les écrans en colonnes (ex: Accueil en 2 colonnes avec Budget à gauche et Ajout/Dépenses à droite).
+     * Option B : Remplacer la navigation supérieure par une vraie Sidebar latérale fixe à gauche (largeur ~260px) pour une ergonomie web/SaaS complète.
+   - Modales : doivent s'afficher en fenêtres flottantes centrées avec overlay sombre flouté, et non remonter du bas.
+   - Graphique de l'écran Analyse : le donut Chart.js doit être plus large, et la légende + chiffres clés doivent se placer à côté (côte à côte) plutôt qu'en dessous.
+
+--------------------------------------------------------------------------------
+3. LE DILEMME ARCHITECTURAL : FICHIER UNIQUE VS PROJET MODULAIRE
+--------------------------------------------------------------------------------
+
+⚠️ POINT CRITIQUE À TRANSMETTRE À L'IA QUI VA ÉCRIRE LE PROMPT :
+
+Dans le prompt précédent ("responsive.txt"), il était demandé :
+"Un seul fichier HTML/CSS/JS, pas de build step. Livrable : Le fichier HTML complet et autonome".
+C'est précisément cette consigne qui a forcé la création d'un index.html tout-en-un de 2 800 lignes déconnecté du reste du projet modulaire (app.js, nyega-theme.css, Supabase), provoquant le besoin d'un rollback.
+
+L'IA rédigeant le prompt doit impérativement préciser la cible exacte :
+- Choix 1 (Recommandé pour préserver le projet existant) :
+  "Modifie les fichiers existants nyega-web/css/nyega-app.css et nyega-web/index.html pour appliquer les media queries sans casser la liaison avec app.js, supabase-client.js et config.js."
+- Choix 2 (Si l'utilisateur veut une version de démonstration standalone) :
+  "Crée un fichier autonome distinct nommé demo-responsive.html sans écraser les fichiers officiels du projet nyega-web/."
+
+--------------------------------------------------------------------------------
+4. CE DONT L'IA A BESOIN POUR RÉDIGER LE PROMPT IDÉAL
+--------------------------------------------------------------------------------
+
+Pour que le prompt généré soit parfait, l'IA qui le rédige doit inclure les éléments suivants :
+
+1. Rôle et contexte :
+   - "Tu es un expert CSS/Frontend intervenant sur une application web existante NyeGa (gestion de budget étudiant togolais en FCFA)."
+
+2. Fichiers cibles explicites :
+   - Indiquer exactement quels fichiers modifier (ex: `nyega-web/css/nyega-app.css` et `nyega-web/index.html`).
+
+3. Palette de couleurs et variables :
+   - Utiliser les variables CSS existantes du thème :
+     `var(--ny-primary)` (#002D7A ou #16305C selon la nuance retenue),
+     `var(--ny-secondary)` (#10B982 ou #1EA97C),
+     `var(--ny-tertiary)` (#FBB418 ou #E8A93C).
+
+4. Spécifications strictes par Breakpoint :
+   - Mobile (< 768px) :
+     * 100% largeur écran
+     * Bottom Navigation Bar fixe préservée avec bouton central (+)
+     * Hauteur tactile minimale de 44x44px sur tous les éléments cliquables
+     * Support safe-area-inset-bottom
+     * Modales en Bottom Sheet (glissant du bas)
+   - Tablette (768px à 1024px) :
+     * Conteneur centré max-width 780px
+     * Grilles ajustées (montants rapides sur 6 colonnes, filtres sur 2 colonnes)
+     * Modales centrées avec overlay
+   - Desktop (> 1024px) :
+     * Sidebar latérale fixe à gauche OU En-tête horizontal étendu (à choisir)
+     * Écran Accueil : agencement en grille 2 colonnes (colonne 1 : carte budget + jauge + budget jour ; colonne 2 : ajout rapide / dernières dépenses)
+     * Écran Analyse : agencement côte à côte (Donut Chart à gauche, Légende et Chiffres clés à droite)
+     * Modales centrées
+
+5. Règles d'or de non-régression :
+   - Ne renommer aucun ID utilisé par le JavaScript :
+     #homeRemainingAmount, #homeSpentAmount, #homeTotalBudget, #homeProgressBar,
+     #homeDailyAmount, #homeDaysLeft, #homeRecentExpensesList, #formAddExpense,
+     #detectedCategoryPill, #fullExpensesList, #categoryDonutChart, etc.
+   - Ne casser aucun événement onclick : navigateToScreen(), open1TapCategoryPicker(),
+     handleCreateExpense(), exportExpensesCSV(), etc.
+   - Ne pas supprimer l'authentification Supabase ni les imports Chart.js / FontAwesome.
+
+--------------------------------------------------------------------------------
+5. MODÈLE DE PROMPT QUE L'AUTRE IA POURRA PRODUIRE
+--------------------------------------------------------------------------------
+
+Voici le squelette type de prompt attendu :
+
+"""
+Agis en tant qu'ingénieur frontend senior.
+Améliore la responsivité de l'application NyeGa située dans `nyega-web/` sans casser aucune fonctionnalité existante.
+
+Fichiers à modifier :
+- `nyega-web/css/nyega-app.css` (mise en page, media queries, flexbox/grid)
+- `nyega-web/index.html` (classes et conteneurs structurels uniquement, sans toucher aux IDs ni aux scripts)
+
+Objectifs :
+1. Mobile (< 768px) : bottom-nav tactile (zones >= 44px), modales en bottom-sheet, safe-areas.
+2. Tablette (768-1024px) : conteneur centré (max-width 780px), grilles optimisées.
+3. Desktop (> 1024px) : sidebar de navigation à gauche de 260px (ou header large), écran Accueil en 2 colonnes (budget d'un côté, dépenses/ajout de l'autre), écran Analyse en 2 colonnes (donut chart à côté de la légende), modales centrées.
+
+Contraintes :
+- Ne modifie ni les IDs, ni app.js, ni supabase-client.js.
+- Conserve les variables CSS de `nyega-theme.css`.
+"""
+================================================================================
