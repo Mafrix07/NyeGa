@@ -927,22 +927,21 @@ img {
   display: block;
   font-size: 13px;
   font-weight: 700;
-  color: var(--ny-primary);
+  color: var(--ny-on-surface-variant);
   margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.1px;
 }
 
 .ny-form-control {
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   padding: 12px 14px;
   font-size: 16px; /* Empêche le zoom auto forcé sur iOS Safari */
   font-family: var(--ny-font-body);
   color: var(--ny-on-surface);
   background-color: #FFFFFF;
-  border: 2px solid var(--ny-outline);
-  border-radius: var(--ny-radius-sm);
+  border: 1.5px solid var(--ny-outline);
+  border-radius: var(--ny-radius);
   outline: none;
   transition: var(--ny-transition);
 }
@@ -1438,10 +1437,10 @@ img {
 }
 
 .ny-icon-btn {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: var(--ny-radius-sm);
   border: 1px solid var(--ny-outline);
   background: #FFFFFF;
@@ -1451,14 +1450,14 @@ img {
   justify-content: center;
   cursor: pointer;
   transition: var(--ny-transition);
-  font-size: 13px;
+  font-size: 14px;
   -webkit-tap-highlight-color: transparent;
 }
 
 @media (min-width: 576px) {
   .ny-icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     min-width: 44px;
     min-height: 44px;
     font-size: 14px;
@@ -1476,6 +1475,7 @@ img {
   color: var(--ny-danger);
   border-color: var(--ny-danger);
 }
+
 
 /* ==========================================================
    ANALYTICS SCREEN
@@ -1916,12 +1916,102 @@ img {
 
 .ny-empty-state {
   text-align: center;
-  padding: 40px 20px;
+  padding: 48px 24px;
   color: var(--ny-on-surface-variant);
 }
 
 .ny-empty-state i {
   font-size: 48px;
   color: var(--ny-outline-variant);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  display: block;
 }
+
+.ny-empty-state-title {
+  font-family: var(--ny-font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ny-on-surface-variant);
+  margin-bottom: 8px;
+}
+
+.ny-empty-state-desc {
+  font-size: 14px;
+  color: var(--ny-text-muted);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* ==========================================================
+   ÉTAT DE CHARGEMENT
+   ========================================================== */
+.ny-loading-state {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--ny-text-muted);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ny-loading-state .spinner-border {
+  color: var(--ny-primary);
+  width: 28px;
+  height: 28px;
+}
+
+/* ==========================================================
+   ÉTAT D'ERREUR
+   ========================================================== */
+.ny-error-state {
+  background-color: var(--ny-danger-container);
+  border: 1px solid var(--ny-danger);
+  border-radius: var(--ny-radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ny-error-state i {
+  color: var(--ny-danger);
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ny-error-state-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ny-danger);
+  margin-bottom: 4px;
+}
+
+.ny-error-state-desc {
+  font-size: 13px;
+  color: var(--ny-on-danger-container);
+  line-height: 1.45;
+}
+
+/* ==========================================================
+   AUTH — BOUTON OUTLINE PRIMAIRE ADAPTÉ (Bootstrap override)
+   btn-outline-primary adapté aux tokens NyeGa
+   ========================================================== */
+.btn-outline-primary {
+  color: var(--ny-primary) !important;
+  border-color: var(--ny-primary) !important;
+  background-color: transparent !important;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: var(--ny-primary-container) !important;
+  color: var(--ny-primary) !important;
+  border-color: var(--ny-primary) !important;
+}
+

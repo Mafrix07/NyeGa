@@ -4,7 +4,52 @@
  * Compatible with Flutter ColorScheme specifications
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap");
+/**
+ * POLICES LOCALES — NYEGA DESIGN SYSTEM
+ * Hébergement local (pas de CDN externe) pour performances 2G/3G.
+ * Fichiers attendus dans nyega-web/fonts/
+ * Si absents, le navigateur utilisera les fallbacks systèmes ci-dessous.
+ */
+
+/* Nunito (Titres & en-têtes) */
+@font-face {
+  font-family: 'Nunito';
+  src: local('Nunito'),
+       url('../fonts/Nunito-Bold.woff2') format('woff2'),
+       url('../fonts/Nunito-Bold.woff') format('woff');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito';
+  src: local('Nunito'),
+       url('../fonts/Nunito-Regular.woff2') format('woff2'),
+       url('../fonts/Nunito-Regular.woff') format('woff');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* DM Sans (Corps de texte & interface) */
+@font-face {
+  font-family: 'DM Sans';
+  src: local('DM Sans'),
+       url('../fonts/DMSans-Medium.woff2') format('woff2'),
+       url('../fonts/DMSans-Medium.woff') format('woff');
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: local('DM Sans'),
+       url('../fonts/DMSans-Regular.woff2') format('woff2'),
+       url('../fonts/DMSans-Regular.woff') format('woff');
+  font-weight: 300 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   /* ==========================================================
@@ -131,3 +176,70 @@ a:hover {
   color: var(--ny-secondary);
   text-decoration: none;
 }
+
+/* ==========================================================
+   ACCESSIBILITÉ — FOCUS VISIBLE (WCAG 2.4.11)
+   Anneau de focus visible pour navigation clavier.
+   Ne jamais supprimer l'outline sans alternative.
+   ========================================================== */
+:focus-visible {
+  outline: 3px solid rgba(0, 45, 122, 0.55);
+  outline-offset: 2px;
+}
+
+/* Les éléments interactifs NyeGa ont leur propre style de focus */
+.ny-btn:focus-visible,
+.ny-form-control:focus-visible,
+.ny-auth-tab:focus-visible,
+.ny-bottom-tab:focus-visible,
+.ny-nav-item:focus-visible,
+.ny-quick-chip:focus-visible,
+.ny-auto-category-pill:focus-visible,
+.ny-1tap-item:focus-visible,
+.ny-icon-btn:focus-visible {
+  outline: 3px solid rgba(0, 45, 122, 0.45);
+  outline-offset: 2px;
+}
+
+a:focus-visible {
+  outline: 3px solid rgba(0, 45, 122, 0.45);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ==========================================================
+   ACCESSIBILITÉ — PREFERS REDUCED MOTION (WCAG 2.3.3)
+   Désactive toutes les animations pour les utilisateurs
+   sensibles aux mouvements.
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Désactive les transformations de survol */
+  .ny-btn:hover,
+  .ny-quick-chip:hover,
+  .ny-auto-category-pill:hover,
+  .ny-bottom-tab.active i,
+  .ny-desktop-nav .ny-nav-item:hover {
+    transform: none !important;
+  }
+
+  /* Désactive les animations de slides de modales */
+  .ny-1tap-content,
+  .ny-modal-box {
+    animation: none !important;
+  }
+
+  /* La barre de progression n'anime pas */
+  .ny-progress-bar-fill {
+    transition: none !important;
+  }
+}
+
