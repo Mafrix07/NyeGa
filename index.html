@@ -2,14 +2,2800 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=nyega-web/index.html">
-  <title>Redirection vers NyeGa Web</title>
-  <script>
-    window.location.href = "nyega-web/index.html";
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NyeGa — Gestion de Budget Étudiant (Togo)</title>
+  <meta name="description" content="NyeGa - L'application web responsive de gestion de budget pour étudiants togolais. Catégorisation automatique et devises FCFA.">
+  <link rel="icon" href="nyega-web/img/favicon.ico" type="image/x-icon">
+
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons via CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ==========================================================
+       1. DESIGN TOKENS & RESET
+       ========================================================== */
+    :root {
+      /* Couleurs officielles de la marque NyeGa */
+      --ny-primary: #16305C;            /* Bleu Marine profond */
+      --ny-primary-hover: #0F2242;
+      --ny-primary-light: #EBF1FA;
+      --ny-on-primary: #FFFFFF;
+
+      --ny-secondary: #1EA97C;          /* Vert Teal */
+      --ny-secondary-hover: #178A65;
+      --ny-secondary-light: #E3F8F0;
+      --ny-on-secondary: #FFFFFF;
+
+      --ny-tertiary: #E8A93C;           /* Doré / Jaune togolais */
+      --ny-tertiary-hover: #D69427;
+      --ny-tertiary-light: #FEF6E9;
+      --ny-on-tertiary: #16305C;
+
+      /* Couleurs fonctionnelles */
+      --ny-danger: #DC2626;
+      --ny-danger-light: #FEE2E2;
+      --ny-success: #16A34A;
+      --ny-success-light: #DCFCE7;
+      --ny-warning: #D97706;
+      --ny-warning-light: #FEF3C7;
+
+      /* Neutres */
+      --ny-bg: #F8FAFC;
+      --ny-surface: #FFFFFF;
+      --ny-surface-alt: #F1F5F9;
+      --ny-text: #0F172A;
+      --ny-text-muted: #64748B;
+      --ny-border: #E2E8F0;
+      --ny-border-subtle: #EDF2F7;
+
+      /* Typographie & Formes */
+      --ny-font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --ny-radius-sm: 8px;
+      --ny-radius: 14px;
+      --ny-radius-lg: 20px;
+      --ny-radius-full: 9999px;
+
+      /* Ombres */
+      --ny-shadow-xs: 0 1px 3px rgba(22, 48, 92, 0.05);
+      --ny-shadow-sm: 0 4px 12px rgba(22, 48, 92, 0.06);
+      --ny-shadow: 0 8px 24px rgba(22, 48, 92, 0.08);
+      --ny-shadow-lg: 0 16px 36px rgba(22, 48, 92, 0.12);
+      --ny-shadow-modal: 0 24px 60px rgba(15, 34, 66, 0.28);
+
+      --ny-transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      --ny-sidebar-width: 270px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      font-family: var(--ny-font);
+      background-color: var(--ny-bg);
+      color: var(--ny-text);
+      line-height: 1.5;
+      font-size: 15px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    /* ==========================================================
+       2. TYPOGRAPHIE ET LOGO DE MARQUE
+       ========================================================== */
+    .ny-logo-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .ny-logo-symbol {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--ny-secondary) 0%, #15805D 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 19px;
+      box-shadow: 0 4px 10px rgba(30, 169, 124, 0.35);
+      flex-shrink: 0;
+    }
+
+    .ny-logo-text-group {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+
+    .ny-logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .ny-part-nye {
+      color: #FFFFFF;
+    }
+
+    .ny-sidebar .ny-part-nye {
+      color: #FFFFFF;
+    }
+
+    .ny-header-mobile .ny-part-nye {
+      color: #FFFFFF;
+    }
+
+    .ny-part-ga {
+      color: var(--ny-secondary);
+    }
+
+    .ny-logo-tagline {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 0.3px;
+    }
+
+    /* ==========================================================
+       3. ARCHITECTURE GLOBALE DU SHELL
+       ========================================================== */
+    .ny-layout-shell {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* SIDEBAR (Desktop) */
+    .ny-sidebar {
+      display: none;
+    }
+
+    /* HEADER MOBILE & TABLET */
+    .ny-header-mobile {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--ny-primary);
+      color: #FFFFFF;
+      z-index: 1000;
+      padding: max(12px, env(safe-area-inset-top, 12px)) 16px 12px 16px;
+      box-shadow: var(--ny-shadow-sm);
+    }
+
+    .ny-header-mobile-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .ny-header-user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 6px 12px;
+      border-radius: var(--ny-radius-full);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .ny-user-avatar-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--ny-secondary);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* CONTENEUR PRINCIPAL DE CONTENU */
+    .ny-content-wrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .ny-main-container {
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 16px calc(88px + env(safe-area-inset-bottom, 16px)) 16px;
+      flex: 1;
+    }
+
+    /* SCREENS */
+    .ny-screen {
+      display: none;
+      animation: nyFadeIn 0.22s ease-out;
+    }
+
+    .ny-screen.active {
+      display: block;
+    }
+
+    @keyframes nyFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================
+       4. NAVIGATION MOBILE PAR ONGLETS (BOTTOM BAR)
+       ========================================================== */
+    .ny-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(64px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: #FFFFFF;
+      border-top: 1px solid var(--ny-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+      box-shadow: 0 -4px 16px rgba(22, 48, 92, 0.08);
+    }
+
+    .ny-bottom-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 48px;
+      min-width: 48px;
+      color: var(--ny-text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: var(--ny-transition);
+      user-select: none;
+      position: relative;
+    }
+
+    .ny-bottom-tab i {
+      font-size: 19px;
+      margin-bottom: 3px;
+      transition: var(--ny-transition);
+    }
+
+    .ny-bottom-tab:hover,
+    .ny-bottom-tab.active {
+      color: var(--ny-primary);
+    }
+
+    .ny-bottom-tab.active i {
+      color: var(--ny-secondary);
+      transform: translateY(-2px);
+    }
+
+    /* Bouton central surélevé "Ajouter" */
+    .ny-bottom-tab.ny-tab-add .ny-add-bubble {
+      width: 46px;
+      height: 46px;
+      background: linear-gradient(135deg, var(--ny-primary) 0%, #0F2242 100%);
+      color: #FFFFFF;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 14px rgba(22, 48, 92, 0.35);
+      margin-top: -20px;
+      transition: var(--ny-transition);
+      border: 3px solid #FFFFFF;
+    }
+
+    .ny-bottom-tab.ny-tab-add.active .ny-add-bubble,
+    .ny-bottom-tab.ny-tab-add:hover .ny-add-bubble {
+      background: linear-gradient(135deg, var(--ny-secondary) 0%, #15805D 100%);
+      transform: scale(1.08) translateY(-2px);
+      box-shadow: 0 6px 16px rgba(30, 169, 124, 0.4);
+    }
+
+    /* ==========================================================
+       5. COMPOSANTS DE BASE : CARTES & ÉLÉMENTS D'INTERFACE
+       ========================================================== */
+    .ny-card {
+      background: var(--ny-surface);
+      border-radius: var(--ny-radius);
+      border: 1px solid var(--ny-border);
+      box-shadow: var(--ny-shadow-xs);
+      padding: 20px;
+      margin-bottom: 18px;
+      transition: var(--ny-transition);
+    }
+
+    .ny-card:hover {
+      box-shadow: var(--ny-shadow-sm);
+    }
+
+    .ny-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .ny-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ny-primary);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+    }
+
+    .ny-card-title i {
+      color: var(--ny-secondary);
+      font-size: 18px;
+    }
+
+    /* CARTE BUDGET HERO (ACCUEIL) */
+    .ny-budget-hero-card {
+      background: linear-gradient(135deg, #16305C 0%, #1E417C 100%);
+      color: #FFFFFF;
+      border-radius: var(--ny-radius-lg);
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(22, 48, 92, 0.18);
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ny-budget-hero-card::after {
+      content: "";
+      position: absolute;
+      right: -20px;
+      bottom: -30px;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(30, 169, 124, 0.25) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .ny-hero-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .ny-hero-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ny-hero-amount {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+      color: #FFFFFF;
+    }
+
+    .ny-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--ny-radius-full);
+      font-size: 12.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .status-green {
+      background: rgba(30, 169, 124, 0.2);
+      color: #4ADE80;
+      border: 1px solid rgba(74, 222, 128, 0.35);
+    }
+
+    .status-orange {
+      background: rgba(232, 169, 60, 0.2);
+      color: #FBBF24;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+    }
+
+    .status-red {
+      background: rgba(220, 38, 38, 0.25);
+      color: #F87171;
+      border: 1px solid rgba(248, 113, 113, 0.4);
+    }
+
+    /* Jauge de consommation */
+    .ny-progress-box {
+      margin-top: 8px;
+    }
+
+    .ny-progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 8px;
+    }
+
+    .ny-progress-track {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: var(--ny-radius-full);
+      overflow: hidden;
+    }
+
+    .ny-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--ny-secondary) 0%, #34D399 100%);
+      border-radius: var(--ny-radius-full);
+      transition: width 0.4s ease;
+      min-width: 4px;
+    }
+
+    .ny-progress-fill.fill-orange {
+      background: linear-gradient(90deg, var(--ny-tertiary) 0%, #F59E0B 100%);
+    }
+
+    .ny-progress-fill.fill-red {
+      background: linear-gradient(90deg, #EF4444 0%, var(--ny-danger) 100%);
+    }
+
+    /* CARTE BUDGET JOURNALIER CONSEILLÉ */
+    .ny-daily-card {
+      background: var(--ny-surface);
+      border-radius: var(--ny-radius);
+      border: 1px solid var(--ny-border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      box-shadow: var(--ny-shadow-xs);
+      gap: 12px;
+    }
+
+    .ny-daily-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .ny-daily-icon-box {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      border-radius: 12px;
+      background: var(--ny-tertiary-light);
+      color: var(--ny-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .ny-daily-title {
+      font-size: 13px;
+      color: var(--ny-text-muted);
+      font-weight: 600;
+    }
+
+    .ny-daily-amount {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--ny-primary);
+    }
+
+    .ny-daily-right {
+      text-align: right;
+      font-size: 12.5px;
+      color: var(--ny-text-muted);
+    }
+
+    .ny-daily-right strong {
+      color: var(--ny-primary);
+      font-weight: 700;
+    }
+
+    /* BOUTONS & FORMULAIRES */
+    .ny-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 20px;
+      border-radius: var(--ny-radius-sm);
+      font-size: 14.5px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: var(--ny-transition);
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .ny-btn-primary {
+      background: var(--ny-primary);
+      color: #FFFFFF;
+    }
+
+    .ny-btn-primary:hover {
+      background: var(--ny-primary-hover);
+      box-shadow: 0 4px 12px rgba(22, 48, 92, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .ny-btn-secondary {
+      background: var(--ny-secondary);
+      color: #FFFFFF;
+    }
+
+    .ny-btn-secondary:hover {
+      background: var(--ny-secondary-hover);
+      box-shadow: 0 4px 12px rgba(30, 169, 124, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .ny-btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--ny-border);
+      color: var(--ny-primary);
+    }
+
+    .ny-btn-outline:hover {
+      background: var(--ny-surface-alt);
+      border-color: var(--ny-primary);
+    }
+
+    .ny-btn-danger {
+      background: var(--ny-danger);
+      color: #FFFFFF;
+    }
+
+    .ny-btn-danger:hover {
+      background: #B91C1C;
+    }
+
+    .ny-btn-sm {
+      min-height: 38px;
+      padding: 6px 14px;
+      font-size: 13px;
+    }
+
+    .ny-btn-block {
+      width: 100%;
+    }
+
+    /* FORMULAIRES */
+    .ny-form-group {
+      margin-bottom: 18px;
+    }
+
+    .ny-form-label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ny-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .ny-form-control {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 14px;
+      background: #FFFFFF;
+      border: 1.5px solid var(--ny-border);
+      border-radius: var(--ny-radius-sm);
+      color: var(--ny-text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: var(--ny-transition);
+    }
+
+    .ny-form-control:focus {
+      border-color: var(--ny-primary);
+      box-shadow: 0 0 0 3px rgba(22, 48, 92, 0.1);
+    }
+
+    .ny-input-amount {
+      font-size: 26px;
+      font-weight: 800;
+      text-align: center;
+      color: var(--ny-primary);
+      min-height: 58px;
+    }
+
+    /* PUCE MONTANTS RAPIDES */
+    .ny-quick-amounts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 18px;
+    }
+
+    .ny-quick-chip {
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--ny-surface-alt);
+      border: 1.5px solid var(--ny-border);
+      border-radius: var(--ny-radius-sm);
+      font-weight: 700;
+      font-size: 13.5px;
+      color: var(--ny-primary);
+      cursor: pointer;
+      transition: var(--ny-transition);
+      user-select: none;
+    }
+
+    .ny-quick-chip:hover,
+    .ny-quick-chip:active {
+      background: var(--ny-primary-light);
+      border-color: var(--ny-primary);
+      transform: translateY(-1px);
+    }
+
+    /* PASTILLE DE CATÉGORIE DÉTECTÉE */
+    .ny-auto-category-box {
+      background: var(--ny-surface-alt);
+      border: 1.5px dashed var(--ny-border);
+      border-radius: var(--ny-radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .ny-auto-cat-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ny-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ny-auto-category-pill {
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--ny-radius-full);
+      background: #FFFFFF;
+      border: 1.5px solid var(--ny-border);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: var(--ny-shadow-xs);
+      transition: var(--ny-transition);
+      user-select: none;
+    }
+
+    .ny-auto-category-pill:hover {
+      border-color: var(--ny-primary);
+      transform: scale(1.02);
+    }
+
+    .ny-badge-auto {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.08);
+      font-weight: 800;
+    }
+
+    /* LISTE DES DÉPENSES */
+    .ny-expense-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ny-expense-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #FFFFFF;
+      border: 1px solid var(--ny-border);
+      border-radius: var(--ny-radius);
+      transition: var(--ny-transition);
+      gap: 12px;
+    }
+
+    .ny-expense-item:hover {
+      border-color: var(--ny-secondary);
+      box-shadow: var(--ny-shadow-xs);
+    }
+
+    .ny-expense-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .ny-cat-icon-badge {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #FFFFFF;
+      cursor: pointer;
+      transition: var(--ny-transition);
+      flex-shrink: 0;
+    }
+
+    .ny-cat-icon-badge:hover {
+      transform: scale(1.08);
+    }
+
+    .ny-expense-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .ny-expense-title {
+      font-weight: 700;
+      font-size: 14.5px;
+      color: var(--ny-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ny-expense-meta {
+      font-size: 12px;
+      color: var(--ny-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ny-expense-cat-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: var(--ny-radius-full);
+      cursor: pointer;
+      transition: var(--ny-transition);
+    }
+
+    .ny-expense-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .ny-expense-amount {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ny-danger);
+      white-space: nowrap;
+    }
+
+    .ny-icon-btn {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border-radius: var(--ny-radius-sm);
+      border: 1px solid var(--ny-border);
+      background: #FFFFFF;
+      color: var(--ny-text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--ny-transition);
+      font-size: 13px;
+    }
+
+    .ny-icon-btn:hover {
+      background: var(--ny-surface-alt);
+      color: var(--ny-primary);
+      border-color: var(--ny-primary);
+    }
+
+    .ny-icon-btn.btn-delete:hover {
+      background: var(--ny-danger-light);
+      color: var(--ny-danger);
+      border-color: var(--ny-danger);
+    }
+
+    /* FILTRES HISTORIQUE */
+    .ny-history-filters-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    /* STATS ANALYSE */
+    .ny-analytics-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+      margin-bottom: 24px;
+    }
+
+    .ny-stat-card {
+      background: var(--ny-surface-alt);
+      border-radius: var(--ny-radius-sm);
+      border: 1px solid var(--ny-border);
+      padding: 14px;
+    }
+
+    .ny-stat-label {
+      font-size: 12px;
+      color: var(--ny-text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .ny-stat-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ny-primary);
+    }
+
+    /* TABLEAU DE VENTILATION */
+    .ny-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .ny-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    .ny-table th {
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--ny-text-muted);
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--ny-border);
+    }
+
+    .ny-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--ny-border);
+    }
+
+    /* ==========================================================
+       6. MODALES RESPONSIVE (Bottom-Sheet sur Mobile, Centrée sur Desktop)
+       ========================================================== */
+    .ny-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 34, 66, 0.65);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
+      display: none;
+      align-items: flex-end; /* Mobile: monte du bas */
+      justify-content: center;
+      animation: nyFadeIn 0.2s ease-out;
+    }
+
+    .ny-modal-backdrop.open {
+      display: flex;
+    }
+
+    .ny-modal-box {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 520px;
+      border-radius: 24px 24px 0 0; /* Bottom Sheet */
+      padding: 24px;
+      box-shadow: var(--ny-shadow-modal);
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: nySlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    @keyframes nySlideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    /* Poignée de drag mobile */
+    .ny-modal-drag-handle {
+      width: 44px;
+      height: 5px;
+      background: #CBD5E1;
+      border-radius: var(--ny-radius-full);
+      margin: 0 auto 16px auto;
+    }
+
+    .ny-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .ny-modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ny-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .ny-modal-close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--ny-surface-alt);
+      border: none;
+      color: var(--ny-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: var(--ny-transition);
+    }
+
+    .ny-modal-close-btn:hover {
+      background: var(--ny-border);
+      color: var(--ny-primary);
+    }
+
+    /* GRILLE 1-TAP CATEGORIES */
+    .ny-1tap-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .ny-1tap-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: var(--ny-radius-sm);
+      border: 1.5px solid var(--ny-border);
+      background: #FFFFFF;
+      cursor: pointer;
+      min-height: 48px;
+      transition: var(--ny-transition);
+      user-select: none;
+    }
+
+    .ny-1tap-item:hover,
+    .ny-1tap-item:active {
+      background: var(--ny-primary-light);
+      border-color: var(--ny-primary);
+      transform: translateX(4px);
+    }
+
+    .ny-1tap-icon {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      color: #FFFFFF;
+    }
+
+    .ny-1tap-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--ny-primary);
+    }
+
+    /* TOAST NOTIFICATION */
+    .ny-toast {
+      position: fixed;
+      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ny-primary);
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border-radius: var(--ny-radius-full);
+      box-shadow: 0 10px 30px rgba(15, 34, 66, 0.35);
+      font-size: 13.5px;
+      font-weight: 700;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      animation: nyFadeIn 0.25s ease;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* ==========================================================
+       7. RESPONSIVE BREAKPOINT : TABLET (768px à 1024px)
+       ========================================================== */
+    @media (min-width: 768px) {
+      .ny-main-container {
+        max-width: 780px;
+        padding: 24px 20px 90px 20px;
+      }
+
+      .ny-quick-amounts {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      .ny-history-filters-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .ny-1tap-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      /* Modales centrées avec overlay sur tablette */
+      .ny-modal-backdrop {
+        align-items: center;
+        padding: 20px;
+      }
+
+      .ny-modal-box {
+        border-radius: var(--ny-radius-lg);
+        animation: nyZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .ny-modal-drag-handle {
+        display: none;
+      }
+
+      @keyframes nyZoomIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+    }
+
+    /* ==========================================================
+       8. RESPONSIVE BREAKPOINT : DESKTOP (> 1024px)
+       ========================================================== */
+    @media (min-width: 1024px) {
+      /* Cache le header mobile et la bottom bar */
+      .ny-header-mobile {
+        display: none;
+      }
+
+      .ny-bottom-nav {
+        display: none;
+      }
+
+      /* Affichage de la SIDEBAR fixe à gauche */
+      .ny-sidebar {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: var(--ny-sidebar-width);
+        background: linear-gradient(180deg, #16305C 0%, #102344 100%);
+        color: #FFFFFF;
+        padding: 28px 20px 24px 20px;
+        z-index: 1100;
+        box-shadow: 4px 0 20px rgba(15, 34, 66, 0.15);
+      }
+
+      .ny-sidebar-top {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .ny-sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .ny-sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .ny-sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 16px;
+        border-radius: var(--ny-radius-sm);
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 600;
+        font-size: 14.5px;
+        cursor: pointer;
+        transition: var(--ny-transition);
+        user-select: none;
+      }
+
+      .ny-sidebar-link i {
+        font-size: 18px;
+        width: 22px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+        transition: var(--ny-transition);
+      }
+
+      .ny-sidebar-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #FFFFFF;
+      }
+
+      .ny-sidebar-link.active {
+        background: var(--ny-secondary);
+        color: #FFFFFF;
+        box-shadow: 0 4px 14px rgba(30, 169, 124, 0.35);
+      }
+
+      .ny-sidebar-link.active i {
+        color: #FFFFFF;
+      }
+
+      /* Profil utilisateur bas de sidebar */
+      .ny-sidebar-bottom {
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .ny-sidebar-user-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 12px 14px;
+        border-radius: var(--ny-radius-sm);
+      }
+
+      .ny-sidebar-user-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .ny-sidebar-user-name {
+        font-weight: 700;
+        font-size: 14px;
+        color: #FFFFFF;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ny-sidebar-user-role {
+        font-size: 11.5px;
+        color: var(--ny-secondary);
+        font-weight: 600;
+      }
+
+      /* DÉCALAGE DU MAIN CONTENT AREA */
+      .ny-content-wrapper {
+        margin-left: var(--ny-sidebar-width);
+        width: calc(100% - var(--ny-sidebar-width));
+        background: var(--ny-bg);
+      }
+
+      .ny-main-container {
+        max-width: 1240px;
+        padding: 36px 40px 60px 40px;
+      }
+
+      /* DESKTOP : LAYOUT EN COLONNES INTELLIGENTES SUR L'ACCUEIL */
+      .ny-desktop-home-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 28px;
+        align-items: start;
+      }
+
+      /* DESKTOP : ÉCRAN ANALYSE AVEC LÉGENDE ET STATS À CÔTÉ */
+      .ny-desktop-analytics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        align-items: center;
+      }
+
+      .ny-chart-container {
+        position: relative;
+        max-width: 440px;
+        height: 340px;
+        margin: 0 auto;
+      }
+
+      /* Modales centrées avec overlay */
+      .ny-modal-backdrop {
+        align-items: center;
+      }
+
+      .ny-modal-box {
+        border-radius: var(--ny-radius-lg);
+        animation: nyZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .ny-toast {
+        bottom: 30px;
+        left: calc(50% + (var(--ny-sidebar-width) / 2));
+      }
+    }
+  </style>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding: 50px;">
-  <h2>Redirection vers NyeGa...</h2>
-  <p>Si la redirection ne fonctionne pas automatiquement, <a href="nyega-web/index.html">cliquez ici pour accéder à l'application</a>.</p>
+<body>
+
+  <div class="ny-layout-shell">
+
+    <!-- ==========================================================
+         SIDEBAR NAVIGATION (Desktop > 1024px)
+         ========================================================== -->
+    <aside class="ny-sidebar">
+      <div class="ny-sidebar-top">
+        <a href="#accueil" class="ny-logo-brand" onclick="navigate('accueil'); return false;">
+          <div class="ny-logo-symbol">N</div>
+          <div class="ny-logo-text-group">
+            <span class="ny-logo-text">
+              <span class="ny-part-nye">Nye</span><span class="ny-part-ga">Ga</span>
+            </span>
+            <span class="ny-logo-tagline">Own your spending • Lomé</span>
+          </div>
+        </a>
+
+        <nav class="ny-sidebar-nav">
+          <a class="ny-sidebar-link active" data-screen="accueil" onclick="navigate('accueil')">
+            <i class="fa-solid fa-house"></i>
+            <span>Accueil</span>
+          </a>
+          <a class="ny-sidebar-link" data-screen="ajout" onclick="navigate('ajout')">
+            <i class="fa-solid fa-circle-plus"></i>
+            <span>Nouvelle Dépense</span>
+          </a>
+          <a class="ny-sidebar-link" data-screen="historique" onclick="navigate('historique')">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>Historique</span>
+          </a>
+          <a class="ny-sidebar-link" data-screen="analyse" onclick="navigate('analyse')">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Analyse & Répartition</span>
+          </a>
+          <a class="ny-sidebar-link" data-screen="budget" onclick="navigate('budget')">
+            <i class="fa-solid fa-sliders"></i>
+            <span>Budget & Paramètres</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="ny-sidebar-bottom">
+        <div class="ny-sidebar-user-card">
+          <div class="ny-user-avatar-circle" style="width:34px; height:34px; font-size:14px;">É</div>
+          <div class="ny-sidebar-user-info">
+            <div class="ny-sidebar-user-name">Étudiant Lomé</div>
+            <div class="ny-sidebar-user-role">Devise : FCFA (Togo)</div>
+          </div>
+          <button type="button" class="ny-icon-btn" title="Réinitialiser l'application" onclick="handleResetAllData()">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==========================================================
+         CONTENT WRAPPER (Contient le header mobile et les écrans)
+         ========================================================== -->
+    <div class="ny-content-wrapper">
+
+      <!-- HEADER MOBILE & TABLET (< 1024px) -->
+      <header class="ny-header-mobile">
+        <div class="ny-header-mobile-inner">
+          <a href="#accueil" class="ny-logo-brand" onclick="navigate('accueil'); return false;">
+            <div class="ny-logo-symbol" style="width:32px; height:32px; font-size:16px;">N</div>
+            <span class="ny-logo-text" style="font-size:20px;">
+              <span class="ny-part-nye">Nye</span><span class="ny-part-ga">Ga</span>
+            </span>
+          </a>
+          <div class="ny-header-user-badge">
+            <div class="ny-user-avatar-circle">É</div>
+            <span>Étudiant</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- MAIN CONTAINER -->
+      <main class="ny-main-container">
+
+        <!-- ======================================================
+             ÉCRAN 1 : ACCUEIL (DASHBOARD)
+             ====================================================== -->
+        <section id="screen-accueil" class="ny-screen active">
+
+          <!-- Desktop Grid Container : 2 colonnes intelligentes sur desktop -->
+          <div class="ny-desktop-home-grid">
+
+            <!-- Colonne 1 : Budget Disponible, Statut & Jauge -->
+            <div class="ny-home-col-main">
+
+              <!-- Carte Budget Hero -->
+              <div class="ny-budget-hero-card">
+                <div class="ny-hero-top">
+                  <div>
+                    <div class="ny-hero-label">Budget restant disponible</div>
+                    <div class="ny-hero-amount" id="homeRemainingAmount">-- FCFA</div>
+                  </div>
+                  <div class="ny-status-pill status-green" id="homeStatusPill">
+                    <i class="fa-solid fa-circle" id="homeStatusIcon"></i>
+                    <span id="homeStatusText">Budget Sain</span>
+                  </div>
+                </div>
+
+                <div class="ny-progress-box">
+                  <div class="ny-progress-labels">
+                    <span>Dépensé : <strong id="homeSpentAmount">-- FCFA</strong></span>
+                    <span>Budget total : <strong id="homeTotalBudget">-- FCFA</strong></span>
+                  </div>
+                  <div class="ny-progress-track">
+                    <div class="ny-progress-fill" id="homeProgressBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Carte Budget Journalier Conseillé -->
+              <div class="ny-daily-card">
+                <div class="ny-daily-left">
+                  <div class="ny-daily-icon-box">
+                    <i class="fa-solid fa-calendar-check"></i>
+                  </div>
+                  <div>
+                    <div class="ny-daily-title">Budget journalier conseillé</div>
+                    <div class="ny-daily-amount" id="homeDailyAmount">-- FCFA / jour</div>
+                  </div>
+                </div>
+                <div class="ny-daily-right">
+                  <div><strong id="homeDaysLeft">--</strong> jours restants</div>
+                  <span id="homePeriodEnd">Jusqu'au --</span>
+                </div>
+              </div>
+
+              <!-- Astuce Étudiant Togo (Visible sur grand écran) -->
+              <div class="ny-card" style="background:var(--ny-primary-light); border-color:rgba(22,48,92,0.15);">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="fa-solid fa-lightbulb" style="color:var(--ny-tertiary); font-size:24px;"></i>
+                  <div>
+                    <strong style="color:var(--ny-primary); font-size:14px; display:block;">Astuce Étudiant NyeGa</strong>
+                    <span style="color:var(--ny-text-muted); font-size:13px;">Anticipez vos zem du campus et forfaits nuit Togocom/Moov en début de semaine pour garder le contrôle !</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Colonne 2 : Ajout Rapide Direct (Desktop) & Dernières Dépenses -->
+            <div class="ny-home-col-side">
+
+              <!-- Formulaire Ajout Rapide Intégré (Sur Desktop) -->
+              <div class="ny-card ny-desktop-quick-add" id="desktopQuickAddCard">
+                <div class="ny-card-header">
+                  <h2 class="ny-card-title"><i class="fa-solid fa-bolt"></i> Ajout Rapide</h2>
+                  <span class="badge" style="background:var(--ny-secondary-light); color:var(--ny-secondary); font-size:11px; padding:4px 8px; border-radius:6px; font-weight:700;">En 1 tap</span>
+                </div>
+
+                <form onsubmit="handleQuickCreateExpense(event)">
+                  <div class="ny-form-group">
+                    <label class="ny-form-label">Montant (FCFA)</label>
+                    <input type="number" step="1" min="1" id="quickExpenseAmount" class="ny-form-control" style="font-weight:800; font-size:20px; color:var(--ny-primary);" placeholder="Ex: 500" required>
+                  </div>
+
+                  <div class="ny-quick-amounts" style="margin-bottom:12px;">
+                    <div class="ny-quick-chip" onclick="setQuickInputAmount('quickExpenseAmount', 100)">+ 100 F</div>
+                    <div class="ny-quick-chip" onclick="setQuickInputAmount('quickExpenseAmount', 200)">+ 200 F</div>
+                    <div class="ny-quick-chip" onclick="setQuickInputAmount('quickExpenseAmount', 500)">+ 500 F</div>
+                    <div class="ny-quick-chip" onclick="setQuickInputAmount('quickExpenseAmount', 1000)">+ 1 000 F</div>
+                    <div class="ny-quick-chip" onclick="setQuickInputAmount('quickExpenseAmount', 2000)">+ 2 000 F</div>
+                    <div class="ny-quick-chip" onclick="setQuickInputAmount('quickExpenseAmount', 5000)">+ 5 000 F</div>
+                  </div>
+
+                  <div class="ny-form-group">
+                    <label class="ny-form-label">Description libre</label>
+                    <input type="text" id="quickExpenseDescription" class="ny-form-control" placeholder="Zem campus, ayimolou, pass data..." required oninput="onQuickDescriptionChange()">
+                  </div>
+
+                  <div class="ny-auto-category-box" style="padding:10px 14px; margin-bottom:14px;">
+                    <span class="ny-auto-cat-label"><i class="fa-solid fa-wand-magic-sparkles"></i> Catégorie :</span>
+                    <div id="quickDetectedPill" class="ny-auto-category-pill" style="min-height:38px; padding:4px 12px;" onclick="open1TapCategoryModal('quick')">
+                      <i id="quickCatIcon" class="fa-solid fa-tag"></i>
+                      <span id="quickCatName">Autres</span>
+                      <i class="fa-solid fa-chevron-down" style="font-size:10px; color:var(--ny-text-muted);"></i>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="ny-btn ny-btn-primary ny-btn-block">
+                    <i class="fa-solid fa-check mr-1"></i> Enregistrer
+                  </button>
+                </form>
+              </div>
+
+              <!-- Dernières Dépenses Récentes -->
+              <div class="ny-card">
+                <div class="ny-card-header">
+                  <h2 class="ny-card-title"><i class="fa-solid fa-clock-rotate-left"></i> Dernières Dépenses</h2>
+                  <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="navigate('historique')">
+                    Voir tout <i class="fa-solid fa-arrow-right ml-1"></i>
+                  </button>
+                </div>
+                <div id="homeRecentExpensesList" class="ny-expense-list">
+                  <!-- Injecté dynamiquement -->
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ======================================================
+             ÉCRAN 2 : NOUVELLE DÉPENSE (AJOUT COMPLET)
+             ====================================================== -->
+        <section id="screen-ajout" class="ny-screen">
+          <div class="ny-card" style="max-width: 640px; margin: 0 auto;">
+            <div class="ny-card-header">
+              <h2 class="ny-card-title"><i class="fa-solid fa-circle-plus"></i> Nouvelle Dépense</h2>
+              <span class="badge" style="background:var(--ny-primary-light); color:var(--ny-primary); font-size:12px; padding:5px 10px; border-radius:6px; font-weight:700;">
+                Catégorisation automatique
+              </span>
+            </div>
+
+            <form id="formAddExpense" onsubmit="handleCreateExpense(event)">
+              <!-- Montant -->
+              <div class="ny-form-group">
+                <label class="ny-form-label" for="expenseAmount">Montant (en FCFA)</label>
+                <input type="number" step="1" min="1" id="expenseAmount" class="ny-form-control ny-input-amount" placeholder="0 FCFA" required autofocus>
+              </div>
+
+              <!-- Puces de montants rapides (min 44px de hauteur) -->
+              <div class="ny-quick-amounts">
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('expenseAmount', 100)">+ 100 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('expenseAmount', 200)">+ 200 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('expenseAmount', 500)">+ 500 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('expenseAmount', 1000)">+ 1 000 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('expenseAmount', 2000)">+ 2 000 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('expenseAmount', 5000)">+ 5 000 F</div>
+              </div>
+
+              <!-- Description libre -->
+              <div class="ny-form-group">
+                <label class="ny-form-label" for="expenseDescription">Description libre de la dépense</label>
+                <input type="text" id="expenseDescription" class="ny-form-control" placeholder="Ex: Zem campus, ayimolou + oeuf, forfait moov, maquis..." required oninput="onMainDescriptionChange()" maxlength="100">
+                <small style="color:var(--ny-text-muted); font-size:12.5px; display:block; margin-top:4px;">
+                  NyeGa détermine instantanément la catégorie selon les expressions togolaises.
+                </small>
+              </div>
+
+              <!-- Pastille de catégorie automatique (Modifiable en 1 tap) -->
+              <div class="ny-auto-category-box">
+                <div>
+                  <span class="ny-auto-cat-label">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Catégorie détectée :
+                  </span>
+                  <span style="font-size:12px; color:var(--ny-text-muted);">Touchez la pastille pour corriger en 1 tap si besoin</span>
+                </div>
+                <div id="detectedCategoryPill" class="ny-auto-category-pill" onclick="open1TapCategoryModal('main')">
+                  <i id="detectedCategoryIcon" class="fa-solid fa-tag"></i>
+                  <span id="detectedCategoryName">Autres</span>
+                  <span id="detectedCategoryBadge" class="ny-badge-auto">auto</span>
+                  <i class="fa-solid fa-chevron-down" style="font-size:11px; color:var(--ny-text-muted); margin-left:4px;"></i>
+                </div>
+              </div>
+
+              <!-- Date et Moyen de paiement -->
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+                <div class="ny-form-group">
+                  <label class="ny-form-label" for="expenseDate">Date</label>
+                  <input type="date" id="expenseDate" class="ny-form-control" required>
+                </div>
+                <div class="ny-form-group">
+                  <label class="ny-form-label" for="expensePaymentMethod">Moyen de paiement</label>
+                  <select id="expensePaymentMethod" class="ny-form-control">
+                    <option value="Espèces">Espèces (Cash)</option>
+                    <option value="TMoney">TMoney</option>
+                    <option value="Flooz">Moov Flooz</option>
+                    <option value="Carte">Carte bancaire</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" style="min-height:50px; font-size:16px;">
+                <i class="fa-solid fa-check mr-2"></i> Enregistrer immédiatement
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- ======================================================
+             ÉCRAN 3 : HISTORIQUE DES DÉPENSES
+             ====================================================== -->
+        <section id="screen-historique" class="ny-screen">
+          <div class="ny-card">
+            <div class="ny-card-header">
+              <h2 class="ny-card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique des Dépenses</h2>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="exportExpensesCSV()">
+                  <i class="fa-solid fa-file-arrow-down mr-1"></i> Exporter CSV
+                </button>
+                <span class="badge" id="historyCountBadge" style="background:var(--ny-surface-alt); border:1px solid var(--ny-border); padding:6px 12px; border-radius:6px; font-weight:700; font-size:12px;">
+                  0 dépense
+                </span>
+              </div>
+            </div>
+
+            <!-- Filtres et Tri -->
+            <div class="ny-history-filters-grid">
+              <div>
+                <label class="ny-form-label">Filtrer par catégorie</label>
+                <select id="historyFilterCat" class="ny-form-control" onchange="renderHistory()">
+                  <option value="all">Toutes les catégories</option>
+                  <option value="Alimentation">Alimentation</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Soins et beauté">Soins et beauté</option>
+                  <option value="Connexion internet">Connexion internet</option>
+                  <option value="Crédit d'appel">Crédit d'appel</option>
+                  <option value="Plaisirs">Plaisirs</option>
+                  <option value="Autres">Autres</option>
+                </select>
+              </div>
+              <div>
+                <label class="ny-form-label">Trier par</label>
+                <select id="historySortBy" class="ny-form-control" onchange="renderHistory()">
+                  <option value="date-desc">Date (les plus récentes)</option>
+                  <option value="date-asc">Date (les plus anciennes)</option>
+                  <option value="amount-desc">Montant (décroissant)</option>
+                  <option value="amount-asc">Montant (croissant)</option>
+                </select>
+              </div>
+            </div>
+
+            <p style="font-size:12.5px; color:var(--ny-text-muted); margin-bottom:16px;">
+              <i class="fa-solid fa-circle-info mr-1"></i> Cliquez sur l'icône d'une catégorie pour la modifier en 1 tap.
+            </p>
+
+            <!-- Liste dynamique -->
+            <div id="fullExpensesList" class="ny-expense-list">
+              <!-- Rempli par JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================
+             ÉCRAN 4 : ANALYSE & RÉPARTITION
+             ====================================================== -->
+        <section id="screen-analyse" class="ny-screen">
+          <div class="ny-card">
+            <div class="ny-card-header">
+              <h2 class="ny-card-title"><i class="fa-solid fa-chart-pie"></i> Répartition par Catégorie</h2>
+            </div>
+
+            <!-- Layout Desktop : Graphique à gauche, Légende & Chiffres à droite -->
+            <div class="ny-desktop-analytics-grid">
+              <!-- Graphique Donut -->
+              <div class="ny-chart-container">
+                <canvas id="categoryDonutChart"></canvas>
+              </div>
+
+              <!-- Chiffres Clés & Légende côte à côte -->
+              <div>
+                <div class="ny-analytics-stats-grid">
+                  <div class="ny-stat-card">
+                    <div class="ny-stat-label">Moyenne / jour</div>
+                    <div class="ny-stat-val" id="statsAvgPerDay">-- FCFA</div>
+                  </div>
+                  <div class="ny-stat-card">
+                    <div class="ny-stat-label">Poste principal</div>
+                    <div class="ny-stat-val" id="statsTopCat">--</div>
+                  </div>
+                  <div class="ny-stat-card">
+                    <div class="ny-stat-label">Plus grosse dépense</div>
+                    <div class="ny-stat-val" style="color:var(--ny-danger);" id="statsMaxExpense">-- FCFA</div>
+                  </div>
+                </div>
+
+                <div id="analyticsLegendContainer" style="display:flex; flex-direction:column; gap:8px;">
+                  <!-- Légende dynamique générée par JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Tableau détaillé de ventilation -->
+            <h3 style="font-size:16px; font-weight:800; color:var(--ny-primary); margin:28px 0 14px 0;">
+              Ventilation détaillée en FCFA
+            </h3>
+            <div class="ny-table-wrap">
+              <table class="ny-table">
+                <thead>
+                  <tr>
+                    <th>Catégorie</th>
+                    <th>Montant Total</th>
+                    <th>Part (%)</th>
+                    <th>Nombre de dépenses</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsTableBody">
+                  <!-- Rempli dynamiquement -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================
+             ÉCRAN 5 : CONFIGURATION DU BUDGET
+             ====================================================== -->
+        <section id="screen-budget" class="ny-screen">
+          <div class="ny-card" style="max-width: 640px; margin: 0 auto 20px auto;">
+            <div class="ny-card-header">
+              <h2 class="ny-card-title"><i class="fa-solid fa-sliders"></i> Configuration du Budget</h2>
+            </div>
+            <p style="font-size:13px; color:var(--ny-text-muted); margin-bottom:18px;">
+              Définissez votre budget alloué pour le mois. Le budget restant et le montant journalier conseillé seront automatiquement recalculés.
+            </p>
+
+            <form id="formBudget" onsubmit="handleSaveBudget(event)">
+              <div class="ny-form-group">
+                <label class="ny-form-label" for="inputBudgetAmount">Montant mensuel en FCFA</label>
+                <input type="number" step="500" min="1000" id="inputBudgetAmount" class="ny-form-control ny-input-amount" required>
+              </div>
+
+              <!-- Puces de budget rapide pour étudiant -->
+              <div class="ny-quick-amounts" style="margin-bottom:20px;">
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('inputBudgetAmount', 30000)">30 000 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('inputBudgetAmount', 50000)">50 000 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('inputBudgetAmount', 75000)">75 000 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('inputBudgetAmount', 100000)">100 000 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('inputBudgetAmount', 150000)">150 000 F</div>
+                <div class="ny-quick-chip" onclick="setQuickInputAmount('inputBudgetAmount', 200000)">200 000 F</div>
+              </div>
+
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+                <div class="ny-form-group">
+                  <label class="ny-form-label" for="inputBudgetStart">Date de début</label>
+                  <input type="date" id="inputBudgetStart" class="ny-form-control" required>
+                </div>
+                <div class="ny-form-group">
+                  <label class="ny-form-label" for="inputBudgetEnd">Date de fin</label>
+                  <input type="date" id="inputBudgetEnd" class="ny-form-control" required>
+                </div>
+              </div>
+
+              <button type="submit" class="ny-btn ny-btn-primary ny-btn-block" style="min-height:48px;">
+                <i class="fa-solid fa-floppy-disk mr-2"></i> Mettre à jour mon budget
+              </button>
+            </form>
+          </div>
+
+          <!-- Données Personnelles et Export -->
+          <div class="ny-card" style="max-width: 640px; margin: 0 auto; border-color: rgba(220,38,38,0.2); background: #FFFBFB;">
+            <h4 style="color:var(--ny-danger); font-size:15px; font-weight:800; margin-bottom:8px;">
+              <i class="fa-solid fa-shield-halved mr-1"></i> Données Personnelles & Sécurité
+            </h4>
+            <p style="font-size:12.5px; color:var(--ny-text-muted); margin-bottom:16px;">
+              Conforme aux exigences de gestion privée. Vous pouvez exporter toutes vos dépenses en CSV ou réinitialiser vos données locales à tout moment.
+            </p>
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">
+              <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="exportExpensesCSV()">
+                <i class="fa-solid fa-file-arrow-down mr-1"></i> Exporter CSV
+              </button>
+              <button type="button" class="ny-btn ny-btn-danger ny-btn-sm" onclick="handleResetAllData()">
+                <i class="fa-solid fa-trash mr-1"></i> Réinitialiser les données
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ======================================================
+           MOBILE BOTTOM NAVIGATION (< 1024px)
+           ====================================================== -->
+      <nav class="ny-bottom-nav">
+        <a class="ny-bottom-tab active" data-screen="accueil" onclick="navigate('accueil')">
+          <i class="fa-solid fa-house"></i>
+          <span>Accueil</span>
+        </a>
+        <a class="ny-bottom-tab" data-screen="historique" onclick="navigate('historique')">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Historique</span>
+        </a>
+        <a class="ny-bottom-tab ny-tab-add" data-screen="ajout" onclick="navigate('ajout')">
+          <div class="ny-add-bubble">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+          <span>Ajouter</span>
+        </a>
+        <a class="ny-bottom-tab" data-screen="analyse" onclick="navigate('analyse')">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Analyse</span>
+        </a>
+        <a class="ny-bottom-tab" data-screen="budget" onclick="navigate('budget')">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Budget</span>
+        </a>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       MODALE 1-TAP CATEGORY PICKER (Bottom-Sheet sur mobile, Centrée sur Desktop)
+       ========================================================== -->
+  <div id="modal1TapCategory" class="ny-modal-backdrop" onclick="if(event.target===this) closeModal('modal1TapCategory')">
+    <div class="ny-modal-box">
+      <div class="ny-modal-drag-handle"></div>
+      <div class="ny-modal-header">
+        <h4 class="ny-modal-title"><i class="fa-solid fa-hand-pointer"></i> Choisir la catégorie (1 tap)</h4>
+        <button type="button" class="ny-modal-close-btn" onclick="closeModal('modal1TapCategory')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p style="font-size:12.5px; color:var(--ny-text-muted); margin-bottom:12px;">
+        Touchez la bonne catégorie. NyeGa enregistrera automatiquement cette règle pour vos prochaines dépenses !
+      </p>
+      <div class="ny-1tap-grid" id="categoryPickerList">
+        <!-- Rempli dynamiquement -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       MODALE MODIFIER UNE DÉPENSE
+       ========================================================== -->
+  <div id="modalEditExpense" class="ny-modal-backdrop" onclick="if(event.target===this) closeModal('modalEditExpense')">
+    <div class="ny-modal-box">
+      <div class="ny-modal-drag-handle"></div>
+      <div class="ny-modal-header">
+        <h4 class="ny-modal-title"><i class="fa-solid fa-pen-to-square"></i> Modifier la dépense</h4>
+        <button type="button" class="ny-modal-close-btn" onclick="closeModal('modalEditExpense')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="handleSaveEditExpense(event)">
+        <input type="hidden" id="editExpenseId">
+        <div class="ny-form-group">
+          <label class="ny-form-label">Montant (FCFA)</label>
+          <input type="number" step="1" min="1" id="editExpenseAmount" class="ny-form-control" style="font-weight:800; font-size:22px; color:var(--ny-primary);" required>
+        </div>
+        <div class="ny-form-group">
+          <label class="ny-form-label">Catégorie</label>
+          <select id="editExpenseCat" class="ny-form-control" required></select>
+        </div>
+        <div class="ny-form-group">
+          <label class="ny-form-label">Description</label>
+          <input type="text" id="editExpenseDesc" class="ny-form-control" required>
+        </div>
+        <div class="ny-form-group">
+          <label class="ny-form-label">Date</label>
+          <input type="date" id="editExpenseDate" class="ny-form-control" required>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button type="button" class="ny-btn ny-btn-outline ny-btn-sm" onclick="closeModal('modalEditExpense')">Annuler</button>
+          <button type="submit" class="ny-btn ny-btn-primary ny-btn-sm">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION FLOTTANT -->
+  <div id="nyToast" class="ny-toast">
+    <i class="fa-solid fa-circle-check" style="color:var(--ny-secondary);"></i>
+    <span id="nyToastText">Action effectuée</span>
+  </div>
+
+  <!-- ==========================================================
+       JAVASCRIPT AUTONOME COMPLET
+       ========================================================== -->
+  <script>
+    (function() {
+      'use strict';
+
+      // --------------------------------------------------------
+      // 1. LES 7 CATÉGORIES TOGOLAISES OFFICIELLES
+      // --------------------------------------------------------
+      const CATEGORIES = [
+        { id: 'cat-1', name: 'Alimentation', icon: 'fa-utensils', color: '#1EA97C' },
+        { id: 'cat-2', name: 'Transport', icon: 'fa-motorcycle', color: '#E8A93C' },
+        { id: 'cat-3', name: 'Soins et beauté', icon: 'fa-heart', color: '#EC4899' },
+        { id: 'cat-4', name: 'Connexion internet', icon: 'fa-wifi', color: '#2563EB' },
+        { id: 'cat-5', name: 'Crédit d\'appel', icon: 'fa-phone', color: '#06B6D4' },
+        { id: 'cat-6', name: 'Plaisirs', icon: 'fa-martini-glass-citrus', color: '#8B5CF6' },
+        { id: 'cat-7', name: 'Autres', icon: 'fa-tag', color: '#64748B' }
+      ];
+
+      // --------------------------------------------------------
+      // 2. DICTIONNAIRE TOGOLAIS DE CATÉGORISATION INSTANTANÉE
+      // --------------------------------------------------------
+      const TOGO_DICTIONARY = {
+        'Transport': [
+          'zem', 'zém', 'zemidjan', 'taxi', 'moto', 'mototaxi', 'bus', 'campus', 'course',
+          'carburant', 'essence', 'station', 'gbaka', 'adawlato', 'assigame', 'baguida',
+          'agoe', 'kelegougan', 'totsi', 'adidogome', 'tokoin', 'deplacement', 'trajet'
+        ],
+        'Alimentation': [
+          'pain', 'riz', 'pate', 'sauce', 'fufu', 'foufou', 'ayimolou', 'atassi', 'kom',
+          'djenkoume', 'ablo', 'gboma', 'ademe', 'oeuf', 'oeufs', 'resto u', 'restou',
+          'cantine', 'sandwich', 'spaghetti', 'alloco', 'garba', 'beignets', 'tchouk',
+          'jus', 'nourriture', 'manger', 'brochette', 'haricot', 'gari', 'manioc', 'repas',
+          'dejeuner', 'diner', 'croissant', 'marche'
+        ],
+        'Soins et beauté': [
+          'gloss', 'tresses', 'tresse', 'meches', 'savon', 'parfum', 'coiffure', 'coiffeur',
+          'defrisage', 'maquillage', 'creme', 'pommade', 'gel', 'serviette', 'barbier',
+          'cheveux', 'perruque', 'ongles', 'dentifrice', 'rasoir', 'shampoing', 'deodorant',
+          'skincare', 'medicament', 'pharmacie'
+        ],
+        'Connexion internet': [
+          'forfait internet', 'forfait data', 'connexion', 'pass internet', 'pass', 'data',
+          'mega', 'giga', 'wifi', 'wi-fi', 'cyber', 'togocom data', 'moov data', 'fibre',
+          'pass nuit', 'pass semaine', 'pass mois', 'box', 'internet'
+        ],
+        'Crédit d\'appel': [
+          'credit', 'crédit', 'appel', 'appels', 'credit dappel', 'togocom credit',
+          'moov credit', 'recharge', 'unite', 'unite appel', 'minute', 'communication'
+        ],
+        'Plaisirs': [
+          'maquis', 'sortie', 'cine', 'cinema', 'biere', 'castel', 'guinness', 'pils',
+          'chill', 'soiree', 'bar', 'fete', 'plage', 'piscine', 'concert', 'loisir',
+          'gaming', 'ps5', 'netflix', 'spotify', 'glace', 'detente'
+        ],
+        'Autres': [
+          'photocopie', 'photocopies', 'impression', 'fourniture', 'cahier', 'stylo',
+          'livre', 'syllabus', 'loyer', 'caution', 'cashpower', 'tde', 'reparation'
+        ]
+      };
+
+      // --------------------------------------------------------
+      // 3. ÉTAT LOCAL (PERSISTÉ DANS LOCALSTORAGE)
+      // --------------------------------------------------------
+      let state = {
+        budget: null,
+        expenses: [],
+        rules: [],
+        currentMainCat: 'Autres',
+        currentQuickCat: 'Autres',
+        pickerContext: 'main', // 'main', 'quick', ou expenseId
+        chartInstance: null
+      };
+
+      // Normalisation de texte
+      function normalize(str) {
+        if (!str) return '';
+        return str
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9\s]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      // Formatage monétaire officiel en FCFA
+      function formatFCFA(val) {
+        const n = Math.round(Number(val) || 0);
+        return new Intl.NumberFormat('fr-FR').format(n) + ' FCFA';
+      }
+
+      // Résolution de catégorie
+      function resolveCategory(description) {
+        if (!description) return 'Autres';
+        const clean = normalize(description);
+        if (!clean) return 'Autres';
+
+        // 1. Règles utilisateur apprises
+        for (const rule of state.rules) {
+          const ruleKw = normalize(rule.keyword);
+          if (ruleKw && clean.includes(ruleKw)) {
+            return rule.category;
+          }
+        }
+
+        // 2. Dictionnaire togolais
+        const words = clean.split(' ');
+        for (const [cat, keywords] of Object.entries(TOGO_DICTIONARY)) {
+          for (const kw of keywords) {
+            const cleanKw = normalize(kw);
+            if (cleanKw.includes(' ')) {
+              if (clean.includes(cleanKw)) return cat;
+            } else {
+              if (words.includes(cleanKw)) return cat;
+            }
+          }
+        }
+        return 'Autres';
+      }
+
+      // --------------------------------------------------------
+      // 4. CHARGEMENT INITIAL DES DONNÉES
+      // --------------------------------------------------------
+      function loadState() {
+        // Règles personnalisées
+        try {
+          const savedRules = localStorage.getItem('nyega_user_rules');
+          state.rules = savedRules ? JSON.parse(savedRules) : [];
+        } catch (e) { state.rules = []; }
+
+        // Budget
+        try {
+          const savedBudget = localStorage.getItem('nyega_budget_fcfa');
+          if (savedBudget) {
+            state.budget = JSON.parse(savedBudget);
+          } else {
+            // Budget étudiant par défaut
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth();
+            const start = new Date(y, m, 1).toISOString().split('T')[0];
+            const end = new Date(y, m + 1, 0).toISOString().split('T')[0];
+            state.budget = {
+              amount: 50000,
+              startDate: start,
+              endDate: end
+            };
+            saveBudgetLocally();
+          }
+        } catch (e) {
+          state.budget = { amount: 50000, startDate: '', endDate: '' };
+        }
+
+        // Dépenses
+        try {
+          const savedExpenses = localStorage.getItem('nyega_expenses_fcfa');
+          if (savedExpenses) {
+            state.expenses = JSON.parse(savedExpenses);
+          } else {
+            // Échantillon togolais initial
+            const today = new Date().toISOString().split('T')[0];
+            state.expenses = [
+              { id: 'exp-1', description: 'Ayimolou + oeuf campus', amount: 600, category: 'Alimentation', date: today, paymentMethod: 'Espèces' },
+              { id: 'exp-2', description: 'Zem Lomé campus aller-retour', amount: 800, category: 'Transport', date: today, paymentMethod: 'Espèces' },
+              { id: 'exp-3', description: 'Pass nuit Moov Data', amount: 500, category: 'Connexion internet', date: today, paymentMethod: 'Flooz' },
+              { id: 'exp-4', description: 'Photocopies cours de gestion', amount: 350, category: 'Autres', date: today, paymentMethod: 'Espèces' }
+            ];
+            saveExpensesLocally();
+          }
+        } catch (e) { state.expenses = []; }
+      }
+
+      function saveExpensesLocally() {
+        localStorage.setItem('nyega_expenses_fcfa', JSON.stringify(state.expenses));
+      }
+
+      function saveBudgetLocally() {
+        localStorage.setItem('nyega_budget_fcfa', JSON.stringify(state.budget));
+      }
+
+      function saveRule(keyword, category) {
+        if (!keyword) return;
+        const cleanKw = normalize(keyword);
+        state.rules = state.rules.filter(r => normalize(r.keyword) !== cleanKw);
+        state.rules.unshift({ keyword: cleanKw, category: category });
+        localStorage.setItem('nyega_user_rules', JSON.stringify(state.rules));
+      }
+
+      // --------------------------------------------------------
+      // 5. CALCULS BUDGÉTAIRES
+      // --------------------------------------------------------
+      function calculateBudget() {
+        const totalBudget = state.budget ? Number(state.budget.amount) : 50000;
+        const totalSpent = state.expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+        const remaining = totalBudget - totalSpent;
+        const spentRatio = totalBudget > 0 ? (totalSpent / totalBudget) : 0;
+        const percentage = Math.min(Math.round(spentRatio * 100), 100);
+
+        // Jours restants
+        let daysLeft = 1;
+        const now = new Date();
+        if (state.budget && state.budget.endDate) {
+          const end = new Date(state.budget.endDate);
+          const diffMs = end - now;
+          daysLeft = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+        } else {
+          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+          daysLeft = Math.max(1, lastDay - now.getDate());
+        }
+
+        const dailyRecommended = remaining > 0 ? Math.round(remaining / daysLeft) : 0;
+
+        return {
+          totalBudget,
+          totalSpent,
+          remaining,
+          spentRatio,
+          percentage,
+          daysLeft,
+          dailyRecommended
+        };
+      }
+
+      // --------------------------------------------------------
+      // 6. MISE À JOUR VISUELLE DES ÉCRANS
+      // --------------------------------------------------------
+      function updateDashboard() {
+        const b = calculateBudget();
+
+        // 1. Hero Card
+        const elRem = document.getElementById('homeRemainingAmount');
+        const elSpent = document.getElementById('homeSpentAmount');
+        const elTotal = document.getElementById('homeTotalBudget');
+        const elBar = document.getElementById('homeProgressBar');
+        const elPill = document.getElementById('homeStatusPill');
+        const elText = document.getElementById('homeStatusText');
+
+        if (elRem) elRem.textContent = formatFCFA(b.remaining);
+        if (elSpent) elSpent.textContent = formatFCFA(b.totalSpent);
+        if (elTotal) elTotal.textContent = formatFCFA(b.totalBudget);
+
+        if (elBar) {
+          elBar.style.width = b.percentage + '%';
+          elBar.className = 'ny-progress-fill';
+          if (b.spentRatio > 0.9 || b.remaining < 0) {
+            elBar.classList.add('fill-red');
+          } else if (b.spentRatio > 0.75) {
+            elBar.classList.add('fill-orange');
+          }
+        }
+
+        if (elPill && elText) {
+          if (b.spentRatio > 0.9 || b.remaining < 0) {
+            elPill.className = 'ny-status-pill status-red';
+            elText.textContent = 'Alerte Dépassement';
+          } else if (b.spentRatio > 0.75) {
+            elPill.className = 'ny-status-pill status-orange';
+            elText.textContent = 'Attention Budget';
+          } else {
+            elPill.className = 'ny-status-pill status-green';
+            elText.textContent = 'Budget Sain';
+          }
+        }
+
+        // 2. Daily Card
+        const elDaily = document.getElementById('homeDailyAmount');
+        const elDays = document.getElementById('homeDaysLeft');
+        const elEnd = document.getElementById('homePeriodEnd');
+        if (elDaily) elDaily.textContent = formatFCFA(b.dailyRecommended) + ' / jour';
+        if (elDays) elDays.textContent = b.daysLeft;
+        if (elEnd && state.budget && state.budget.endDate) {
+          elEnd.textContent = "Jusqu'au " + formatDateFR(state.budget.endDate);
+        }
+
+        // 3. Dernières dépenses sur l'accueil
+        renderRecentExpenses();
+      }
+
+      function renderRecentExpenses() {
+        const container = document.getElementById('homeRecentExpensesList');
+        if (!container) return;
+
+        if (state.expenses.length === 0) {
+          container.innerHTML = '<div style="text-align:center; padding:24px; color:var(--ny-text-muted);"><i class="fa-solid fa-receipt" style="font-size:32px; margin-bottom:8px; opacity:0.4;"></i><p>Aucune dépense enregistrée.</p></div>';
+          return;
+        }
+
+        const recent = [...state.expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4);
+
+        container.innerHTML = recent.map(exp => {
+          const cat = CATEGORIES.find(c => c.name === exp.category) || CATEGORIES[6];
+          return `
+            <div class="ny-expense-item">
+              <div class="ny-expense-left">
+                <div class="ny-cat-icon-badge" style="background:${cat.color};" title="Modifier la catégorie en 1 tap" onclick="open1TapCategoryModal('${exp.id}')">
+                  <i class="fa-solid ${cat.icon}"></i>
+                </div>
+                <div class="ny-expense-info">
+                  <div class="ny-expense-title">${escapeHTML(exp.description)}</div>
+                  <div class="ny-expense-meta">
+                    <span class="ny-expense-cat-tag" style="background:${cat.color}22; color:${cat.color};" onclick="open1TapCategoryModal('${exp.id}')">
+                      ${escapeHTML(exp.category)}
+                    </span>
+                    <span>•</span>
+                    <span>${formatDateFR(exp.date)}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="ny-expense-right">
+                <span class="ny-expense-amount">- ${formatFCFA(exp.amount)}</span>
+                <button type="button" class="ny-icon-btn btn-delete" title="Supprimer" onclick="deleteExpense('${exp.id}')">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderHistory() {
+        const container = document.getElementById('fullExpensesList');
+        const badge = document.getElementById('historyCountBadge');
+        if (!container) return;
+
+        const filterCat = document.getElementById('historyFilterCat')?.value || 'all';
+        const sortBy = document.getElementById('historySortBy')?.value || 'date-desc';
+
+        let list = [...state.expenses];
+
+        // Filtrage
+        if (filterCat !== 'all') {
+          list = list.filter(e => e.category === filterCat);
+        }
+
+        // Tri
+        list.sort((a, b) => {
+          if (sortBy === 'date-desc') return new Date(b.date) - new Date(a.date);
+          if (sortBy === 'date-asc') return new Date(a.date) - new Date(b.date);
+          if (sortBy === 'amount-desc') return Number(b.amount) - Number(a.amount);
+          if (sortBy === 'amount-asc') return Number(a.amount) - Number(b.amount);
+          return 0;
+        });
+
+        if (badge) {
+          badge.textContent = `${list.length} dépense${list.length > 1 ? 's' : ''}`;
+        }
+
+        if (list.length === 0) {
+          container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--ny-text-muted);"><i class="fa-solid fa-inbox" style="font-size:36px; margin-bottom:8px; opacity:0.4;"></i><p>Aucune dépense ne correspond à vos filtres.</p></div>';
+          return;
+        }
+
+        container.innerHTML = list.map(exp => {
+          const cat = CATEGORIES.find(c => c.name === exp.category) || CATEGORIES[6];
+          return `
+            <div class="ny-expense-item">
+              <div class="ny-expense-left">
+                <div class="ny-cat-icon-badge" style="background:${cat.color};" title="Modifier la catégorie en 1 tap" onclick="open1TapCategoryModal('${exp.id}')">
+                  <i class="fa-solid ${cat.icon}"></i>
+                </div>
+                <div class="ny-expense-info">
+                  <div class="ny-expense-title">${escapeHTML(exp.description)}</div>
+                  <div class="ny-expense-meta">
+                    <span class="ny-expense-cat-tag" style="background:${cat.color}22; color:${cat.color};" onclick="open1TapCategoryModal('${exp.id}')">
+                      ${escapeHTML(exp.category)}
+                    </span>
+                    <span>•</span>
+                    <span>${formatDateFR(exp.date)}</span>
+                    <span>•</span>
+                    <span><i class="fa-regular fa-credit-card mr-1"></i>${escapeHTML(exp.paymentMethod || 'Espèces')}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="ny-expense-right">
+                <span class="ny-expense-amount">- ${formatFCFA(exp.amount)}</span>
+                <button type="button" class="ny-icon-btn" title="Modifier" onclick="openEditModal('${exp.id}')">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button type="button" class="ny-icon-btn btn-delete" title="Supprimer" onclick="deleteExpense('${exp.id}')">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function updateAnalytics() {
+        const canvas = document.getElementById('categoryDonutChart');
+        if (!canvas) return;
+
+        // Groupement par catégorie
+        const totals = {};
+        const counts = {};
+        CATEGORIES.forEach(c => {
+          totals[c.name] = 0;
+          counts[c.name] = 0;
+        });
+
+        let totalSpent = 0;
+        state.expenses.forEach(e => {
+          const amt = Number(e.amount) || 0;
+          const cat = totals.hasOwnProperty(e.category) ? e.category : 'Autres';
+          totals[cat] += amt;
+          counts[cat] += 1;
+          totalSpent += amt;
+        });
+
+        // Chiffres Clés
+        const now = new Date();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const avgPerDay = daysInMonth > 0 ? Math.round(totalSpent / daysInMonth) : 0;
+
+        let maxExpense = 0;
+        let topCat = '--';
+        let maxCatAmount = 0;
+
+        state.expenses.forEach(e => {
+          if (Number(e.amount) > maxExpense) maxExpense = Number(e.amount);
+        });
+
+        for (const [catName, amt] of Object.entries(totals)) {
+          if (amt > maxCatAmount) {
+            maxCatAmount = amt;
+            topCat = catName;
+          }
+        }
+
+        const elAvg = document.getElementById('statsAvgPerDay');
+        const elTop = document.getElementById('statsTopCat');
+        const elMax = document.getElementById('statsMaxExpense');
+        if (elAvg) elAvg.textContent = formatFCFA(avgPerDay);
+        if (elTop) elTop.textContent = topCat;
+        if (elMax) elMax.textContent = formatFCFA(maxExpense);
+
+        // Données actives pour le Donut
+        const activeCategories = CATEGORIES.filter(c => totals[c.name] > 0);
+        const labels = activeCategories.map(c => c.name);
+        const dataValues = activeCategories.map(c => totals[c.name]);
+        const bgColors = activeCategories.map(c => c.color);
+
+        // Chart.js initialization / update
+        if (window.Chart) {
+          if (state.chartInstance) {
+            state.chartInstance.destroy();
+          }
+
+          const ctx = canvas.getContext('2d');
+          state.chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: labels.length > 0 ? labels : ['Aucune dépense'],
+              datasets: [{
+                data: dataValues.length > 0 ? dataValues : [1],
+                backgroundColor: bgColors.length > 0 ? bgColors : ['#E2E8F0'],
+                borderWidth: 3,
+                borderColor: '#FFFFFF',
+                hoverOffset: 6
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false // Légende personnalisée responsive à côté
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(item) {
+                      if (dataValues.length === 0) return ' 0 FCFA';
+                      const v = item.raw || 0;
+                      const pct = totalSpent > 0 ? Math.round((v / totalSpent) * 100) : 0;
+                      return ` ${formatFCFA(v)} (${pct}%)`;
+                    }
+                  }
+                }
+              },
+              cutout: '70%'
+            }
+          });
+        }
+
+        // Légende personnalisée interactive
+        const legendContainer = document.getElementById('analyticsLegendContainer');
+        if (legendContainer) {
+          if (activeCategories.length === 0) {
+            legendContainer.innerHTML = '<p style="color:var(--ny-text-muted); font-size:13px;">Enregistrez vos premières dépenses pour voir la répartition.</p>';
+          } else {
+            legendContainer.innerHTML = activeCategories.map(cat => {
+              const amount = totals[cat.name];
+              const pct = totalSpent > 0 ? Math.round((amount / totalSpent) * 100) : 0;
+              return `
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--ny-surface-alt); border-radius:var(--ny-radius-sm);">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="width:12px; height:12px; border-radius:50%; background:${cat.color}; display:inline-block;"></span>
+                    <strong style="font-size:13.5px; color:var(--ny-primary);">${cat.name}</strong>
+                  </div>
+                  <div style="font-size:13px; font-weight:700;">
+                    ${formatFCFA(amount)} <span style="color:var(--ny-text-muted); font-weight:600;">(${pct}%)</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+
+        // Tableau détaillé
+        const tbody = document.getElementById('analyticsTableBody');
+        if (tbody) {
+          tbody.innerHTML = CATEGORIES.map(cat => {
+            const amount = totals[cat.name];
+            const count = counts[cat.name];
+            const pct = totalSpent > 0 ? ((amount / totalSpent) * 100).toFixed(1) : 0;
+            return `
+              <tr>
+                <td>
+                  <span style="display:inline-flex; align-items:center; gap:8px;">
+                    <span style="width:10px; height:10px; border-radius:50%; background:${cat.color};"></span>
+                    <strong>${cat.name}</strong>
+                  </span>
+                </td>
+                <td style="font-weight:700; color:var(--ny-primary);">${formatFCFA(amount)}</td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="flex:1; height:6px; background:var(--ny-border); border-radius:var(--ny-radius-full); overflow:hidden; max-width:80px;">
+                      <div style="width:${pct}%; height:100%; background:${cat.color};"></div>
+                    </div>
+                    <span>${pct}%</span>
+                  </div>
+                </td>
+                <td style="color:var(--ny-text-muted);">${count}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      function updateBudgetScreen() {
+        const inpAmount = document.getElementById('inputBudgetAmount');
+        const inpStart = document.getElementById('inputBudgetStart');
+        const inpEnd = document.getElementById('inputBudgetEnd');
+
+        if (state.budget) {
+          if (inpAmount) inpAmount.value = state.budget.amount || 50000;
+          if (inpStart) inpStart.value = state.budget.startDate || '';
+          if (inpEnd) inpEnd.value = state.budget.endDate || '';
+        }
+      }
+
+      // --------------------------------------------------------
+      // 7. GESTION DES MODALES ET ACTIONS
+      // --------------------------------------------------------
+      window.openModal = function(id) {
+        const m = document.getElementById(id);
+        if (m) m.classList.add('open');
+      };
+
+      window.closeModal = function(id) {
+        const m = document.getElementById(id);
+        if (m) m.classList.remove('open');
+      };
+
+      // 1-Tap Category Picker
+      window.open1TapCategoryModal = function(targetContext) {
+        state.pickerContext = targetContext;
+        const list = document.getElementById('categoryPickerList');
+        if (!list) return;
+
+        list.innerHTML = CATEGORIES.map(cat => `
+          <div class="ny-1tap-item" onclick="select1TapCategory('${cat.name}')">
+            <div class="ny-1tap-icon" style="background:${cat.color};">
+              <i class="fa-solid ${cat.icon}"></i>
+            </div>
+            <div class="ny-1tap-name">${cat.name}</div>
+          </div>
+        `).join('');
+
+        openModal('modal1TapCategory');
+      };
+
+      window.select1TapCategory = function(catName) {
+        const cat = CATEGORIES.find(c => c.name === catName) || CATEGORIES[6];
+
+        if (state.pickerContext === 'main') {
+          state.currentMainCat = catName;
+          updateDetectedPill('main', cat);
+          // Apprentissage automatique du mot-clé
+          const desc = document.getElementById('expenseDescription')?.value;
+          if (desc) saveRule(desc, catName);
+        } else if (state.pickerContext === 'quick') {
+          state.currentQuickCat = catName;
+          updateDetectedPill('quick', cat);
+          const desc = document.getElementById('quickExpenseDescription')?.value;
+          if (desc) saveRule(desc, catName);
+        } else {
+          // C'est un expenseId ! Modification directe en 1 tap
+          const exp = state.expenses.find(e => e.id === state.pickerContext);
+          if (exp) {
+            exp.category = catName;
+            saveExpensesLocally();
+            saveRule(exp.description, catName);
+            showToast(`Catégorie mise à jour : ${catName}`);
+            updateDashboard();
+            renderHistory();
+            updateAnalytics();
+          }
+        }
+
+        closeModal('modal1TapCategory');
+      };
+
+      function updateDetectedPill(context, cat) {
+        if (context === 'main') {
+          const icon = document.getElementById('detectedCategoryIcon');
+          const name = document.getElementById('detectedCategoryName');
+          const badge = document.getElementById('detectedCategoryBadge');
+          if (icon) icon.className = `fa-solid ${cat.icon}`;
+          if (name) name.textContent = cat.name;
+          if (badge) badge.textContent = 'choisi';
+        } else if (context === 'quick') {
+          const icon = document.getElementById('quickCatIcon');
+          const name = document.getElementById('quickCatName');
+          if (icon) icon.className = `fa-solid ${cat.icon}`;
+          if (name) name.textContent = cat.name;
+        }
+      }
+
+      // Live Description Input Listener
+      window.onMainDescriptionChange = function() {
+        const val = document.getElementById('expenseDescription')?.value || '';
+        const detected = resolveCategory(val);
+        state.currentMainCat = detected;
+        const cat = CATEGORIES.find(c => c.name === detected) || CATEGORIES[6];
+        const icon = document.getElementById('detectedCategoryIcon');
+        const name = document.getElementById('detectedCategoryName');
+        const badge = document.getElementById('detectedCategoryBadge');
+        if (icon) icon.className = `fa-solid ${cat.icon}`;
+        if (name) name.textContent = cat.name;
+        if (badge) badge.textContent = 'auto';
+      };
+
+      window.onQuickDescriptionChange = function() {
+        const val = document.getElementById('quickExpenseDescription')?.value || '';
+        const detected = resolveCategory(val);
+        state.currentQuickCat = detected;
+        const cat = CATEGORIES.find(c => c.name === detected) || CATEGORIES[6];
+        const icon = document.getElementById('quickCatIcon');
+        const name = document.getElementById('quickCatName');
+        if (icon) icon.className = `fa-solid ${cat.icon}`;
+        if (name) name.textContent = cat.name;
+      };
+
+      window.setQuickInputAmount = function(inputId, amount) {
+        const el = document.getElementById(inputId);
+        if (el) {
+          const current = Number(el.value) || 0;
+          el.value = current + Number(amount);
+          el.focus();
+        }
+      };
+
+      // Création de Dépense (Écran Ajout)
+      window.handleCreateExpense = function(e) {
+        e.preventDefault();
+        const amt = document.getElementById('expenseAmount')?.value;
+        const desc = document.getElementById('expenseDescription')?.value;
+        const date = document.getElementById('expenseDate')?.value;
+        const method = document.getElementById('expensePaymentMethod')?.value || 'Espèces';
+
+        if (!amt || !desc) return;
+
+        const newExp = {
+          id: 'exp-' + Date.now(),
+          amount: Number(amt),
+          description: desc.trim(),
+          category: state.currentMainCat || 'Autres',
+          date: date || new Date().toISOString().split('T')[0],
+          paymentMethod: method
+        };
+
+        state.expenses.unshift(newExp);
+        saveExpensesLocally();
+
+        // Réinitialisation du formulaire
+        document.getElementById('formAddExpense').reset();
+        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+        state.currentMainCat = 'Autres';
+        updateDetectedPill('main', CATEGORIES[6]);
+
+        showToast('Dépense enregistrée avec succès !');
+        updateDashboard();
+        renderHistory();
+        updateAnalytics();
+        navigate('accueil');
+      };
+
+      // Création Rapide (Desktop Widget sur l'Accueil)
+      window.handleQuickCreateExpense = function(e) {
+        e.preventDefault();
+        const amt = document.getElementById('quickExpenseAmount')?.value;
+        const desc = document.getElementById('quickExpenseDescription')?.value;
+
+        if (!amt || !desc) return;
+
+        const newExp = {
+          id: 'exp-' + Date.now(),
+          amount: Number(amt),
+          description: desc.trim(),
+          category: state.currentQuickCat || 'Autres',
+          date: new Date().toISOString().split('T')[0],
+          paymentMethod: 'Espèces'
+        };
+
+        state.expenses.unshift(newExp);
+        saveExpensesLocally();
+
+        document.getElementById('quickExpenseAmount').value = '';
+        document.getElementById('quickExpenseDescription').value = '';
+        state.currentQuickCat = 'Autres';
+        updateDetectedPill('quick', CATEGORIES[6]);
+
+        showToast('Dépense ajoutée au budget !');
+        updateDashboard();
+        renderHistory();
+        updateAnalytics();
+      };
+
+      // Suppression de Dépense
+      window.deleteExpense = function(id) {
+        if (!confirm('Confirmer la suppression de cette dépense ?')) return;
+        state.expenses = state.expenses.filter(e => e.id !== id);
+        saveExpensesLocally();
+        showToast('Dépense supprimée');
+        updateDashboard();
+        renderHistory();
+        updateAnalytics();
+      };
+
+      // Modification de Dépense
+      window.openEditModal = function(id) {
+        const exp = state.expenses.find(e => e.id === id);
+        if (!exp) return;
+
+        document.getElementById('editExpenseId').value = exp.id;
+        document.getElementById('editExpenseAmount').value = exp.amount;
+        document.getElementById('editExpenseDesc').value = exp.description;
+        document.getElementById('editExpenseDate').value = exp.date;
+
+        const catSelect = document.getElementById('editExpenseCat');
+        if (catSelect) {
+          catSelect.innerHTML = CATEGORIES.map(c => `
+            <option value="${c.name}" ${c.name === exp.category ? 'selected' : ''}>${c.name}</option>
+          `).join('');
+        }
+
+        openModal('modalEditExpense');
+      };
+
+      window.handleSaveEditExpense = function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editExpenseId')?.value;
+        const amt = document.getElementById('editExpenseAmount')?.value;
+        const desc = document.getElementById('editExpenseDesc')?.value;
+        const cat = document.getElementById('editExpenseCat')?.value;
+        const date = document.getElementById('editExpenseDate')?.value;
+
+        const exp = state.expenses.find(e => e.id === id);
+        if (exp) {
+          exp.amount = Number(amt);
+          exp.description = desc.trim();
+          exp.category = cat;
+          exp.date = date;
+          saveExpensesLocally();
+          saveRule(exp.description, cat);
+          closeModal('modalEditExpense');
+          showToast('Dépense mise à jour');
+          updateDashboard();
+          renderHistory();
+          updateAnalytics();
+        }
+      };
+
+      // Sauvegarde du Budget
+      window.handleSaveBudget = function(e) {
+        e.preventDefault();
+        const amt = document.getElementById('inputBudgetAmount')?.value;
+        const start = document.getElementById('inputBudgetStart')?.value;
+        const end = document.getElementById('inputBudgetEnd')?.value;
+
+        if (!amt) return;
+
+        state.budget = {
+          amount: Number(amt),
+          startDate: start,
+          endDate: end
+        };
+        saveBudgetLocally();
+        showToast('Budget mis à jour');
+        updateDashboard();
+        updateBudgetScreen();
+      };
+
+      // Export CSV
+      window.exportExpensesCSV = function() {
+        if (state.expenses.length === 0) {
+          alert('Aucune dépense à exporter.');
+          return;
+        }
+
+        const headers = ['Date', 'Description', 'Categorie', 'Montant_FCFA', 'Moyen_Paiement'];
+        const rows = state.expenses.map(e => [
+          `"${e.date}"`,
+          `"${(e.description || '').replace(/"/g, '""')}"`,
+          `"${e.category}"`,
+          e.amount,
+          `"${e.paymentMethod || 'Espèces'}"`
+        ]);
+
+        const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `nyega_depenses_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('Fichier CSV exporté !');
+      };
+
+      // Réinitialisation Complète
+      window.handleResetAllData = function() {
+        if (!confirm('Voulez-vous réinitialiser toutes vos données de test et recharger les valeurs par défaut ?')) return;
+        localStorage.removeItem('nyega_expenses_fcfa');
+        localStorage.removeItem('nyega_budget_fcfa');
+        localStorage.removeItem('nyega_user_rules');
+        loadState();
+        showToast('Données réinitialisées');
+        updateDashboard();
+        renderHistory();
+        updateAnalytics();
+        updateBudgetScreen();
+      };
+
+      // --------------------------------------------------------
+      // 8. NAVIGATION ENTRE ÉCRANS
+      // --------------------------------------------------------
+      window.navigate = function(screenName) {
+        const screens = document.querySelectorAll('.ny-screen');
+        screens.forEach(s => s.classList.remove('active'));
+
+        const target = document.getElementById('screen-' + screenName);
+        if (target) target.classList.add('active');
+
+        // Bottom nav tabs
+        document.querySelectorAll('.ny-bottom-tab').forEach(tab => {
+          tab.classList.toggle('active', tab.getAttribute('data-screen') === screenName);
+        });
+
+        // Sidebar desktop links
+        document.querySelectorAll('.ny-sidebar-link').forEach(link => {
+          link.classList.toggle('active', link.getAttribute('data-screen') === screenName);
+        });
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Mises à jour spécifiques lors de l'accès
+        if (screenName === 'accueil') updateDashboard();
+        if (screenName === 'historique') renderHistory();
+        if (screenName === 'analyse') updateAnalytics();
+        if (screenName === 'budget') updateBudgetScreen();
+      };
+
+      // Feedback Toast
+      function showToast(msg) {
+        const toast = document.getElementById('nyToast');
+        const text = document.getElementById('nyToastText');
+        if (!toast || !text) return;
+        text.textContent = msg;
+        toast.style.display = 'flex';
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+          toast.style.display = 'none';
+        }, 2800);
+      }
+
+      function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function formatDateFR(dateStr) {
+        if (!dateStr) return '';
+        try {
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+          }
+          return new Date(dateStr).toLocaleDateString('fr-FR');
+        } catch {
+          return dateStr;
+        }
+      }
+
+      // --------------------------------------------------------
+      // 9. DÉMARRAGE DE L'APPLICATION
+      // --------------------------------------------------------
+      document.addEventListener('DOMContentLoaded', function() {
+        loadState();
+
+        // Initialisation de la date d'aujourd'hui dans le formulaire
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('expenseDate');
+        if (dateInput) dateInput.value = today;
+
+        // Mise à jour de tous les modules
+        updateDashboard();
+        renderHistory();
+        updateAnalytics();
+        updateBudgetScreen();
+      });
+
+    })();
+  </script>
 </body>
 </html>
