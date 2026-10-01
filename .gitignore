@@ -1,18 +1,23 @@
 # ==========================================================
-# NYEGA - FICHIER D'IGNORANCE GIT (.gitignore)
+# NYEGA — FICHIER .gitignore
 # Sécurisation stricte avant mise en production
+# Mis à jour : 2026-10-01
 # ==========================================================
 
-# 1. Variables d'environnement & Secrets (CRITIQUE)
+# 1. VARIABLES D'ENVIRONNEMENT & SECRETS (CRITIQUE)
+# ----------------------------------------------------------
 .env
 .env.*
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
-!.env.example
+!.env.example          # Seul le fichier exemple est commité
 
-# Supabase secrets & local environment
+# Supabase secrets & environnements locaux
 supabase/.env
 supabase/.env.*
 supabase/.env.local
@@ -20,19 +25,25 @@ supabase/.env.local
 supabase/functions/*/.env
 supabase/functions/*/.env.*
 !supabase/functions/*/.env.example
+
+# Fichiers temporaires Supabase CLI
 .temp/
 supabase/.temp/
 
-# 2. Dépendances Node & Caches
+# 2. DÉPENDANCES NODE & CACHES
+# ----------------------------------------------------------
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-package-lock.json
 .npm
 
-# 3. Fichiers système & IDE
+# Lockfiles — ne pas commiter (environnements multiples)
+# package-lock.json   # Décommentez si vous voulez l'ignorer
+
+# 3. FICHIERS SYSTÈME & IDE
+# ----------------------------------------------------------
 .DS_Store
 Thumbs.db
 desktop.ini
@@ -46,20 +57,59 @@ desktop.ini
 *.njsproj
 *.sln
 
-# 4. Logs & rapports d'erreurs
+# 4. LOGS & RAPPORTS D'ERREURS
+# ----------------------------------------------------------
 logs/
 *.log
 npm-audit.json
 audit-report.*
 
-# 5. Dossiers de builds & exports temporaires
+# 5. BUILDS & EXPORTS TEMPORAIRES
+# ----------------------------------------------------------
 dist/
 build/
 .cache/
 tmp/
 scratch/
+
+# Exports CSV (données utilisateur — ne jamais commiter)
 *.csv
+
+# Fichiers de réponses & prompts temporaires
 prompt*.txt
 PT3.txt
 REPONSE_PT3.txt
 responsive.txt
+analyse_responsive.txt
+
+# 6. PLAYWRIGHT — TESTS & ÉTATS D'AUTHENTIFICATION
+# ----------------------------------------------------------
+# Rapports de tests
+playwright-report/
+test-results/
+
+# États de session Playwright (CRITIQUE : peut contenir des tokens)
+# Ne JAMAIS commiter ces fichiers
+playwright/.auth/
+**/.auth/
+**/auth-state*.json
+**/storage-state*.json
+**/session-state*.json
+
+# Artefacts de tests visuels (captures d'écran de référence)
+# Décommentez si vous ne souhaitez pas les versionner
+# tests/screenshots/
+
+# 7. FICHIERS DE SKILLS & OUTILS DE DESIGN (LOCAUX UNIQUEMENT)
+# ----------------------------------------------------------
+# Le dossier .design-skills est un outil local — ne pas commiter
+.design-skills/
+
+# Le SKILL.md à la racine est une directive locale
+SKILL.md
+
+# 8. DIVERS
+# ----------------------------------------------------------
+# Fichiers de configuration locale éventuels
+*.local
+theme.dart.bak
