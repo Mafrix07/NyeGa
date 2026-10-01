@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
   <title>NyeGa — Gestion de Budget Étudiant (Togo)</title>
   <meta name="description" content="NyeGa - L'application web mobile-first de gestion de budget pour étudiants togolais. Catégorisation automatique et devises FCFA.">
   <link rel="icon" href="img/favicon.ico">
@@ -465,7 +465,7 @@
   <!-- ==========================================================
        MODALE DE MODIFICATION D'UNE DÉPENSE
        ========================================================== -->
-  <div id="modalEditExpense" class="ny-modal-backdrop" style="display:none;">
+  <div id="modalEditExpense" class="ny-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeEditModal()">
     <div class="ny-modal-box">
       <div class="ny-modal-handle"></div>
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -499,7 +499,7 @@
   </div>
 
   <!-- MODALE CONFIGURATION SUPABASE -->
-  <div id="configModal" class="ny-modal-backdrop" style="display:none;">
+  <div id="configModal" class="ny-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeConfigModal()">
     <div class="ny-modal-box">
       <div class="ny-modal-handle"></div>
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -524,7 +524,7 @@
   </div>
 
   <!-- MODALE DE SAISIE DU BUDGET INITIAL (Demandé à l'étudiant dès son arrivée) -->
-  <div id="modalInitialBudget" class="ny-modal-backdrop" style="display:none; z-index:10000; background:rgba(0, 45, 122, 0.85); backdrop-filter:blur(4px);">
+  <div id="modalInitialBudget" class="ny-modal-backdrop" style="display:none; z-index:10000; background:rgba(0, 45, 122, 0.85); backdrop-filter:blur(4px);" onclick="if(event.target===this)closeInitialBudgetModal()">
     <div class="ny-modal-box text-center" style="max-width:440px;">
       <div class="ny-modal-handle"></div>
       <div class="d-flex justify-content-end mb-1">
@@ -544,7 +544,7 @@
           <input type="number" id="initialModalBudgetAmount" class="ny-form-control text-center font-weight-bold" style="font-size:26px; color:var(--ny-primary);" placeholder="Ex: 50000" min="1000" step="500" required autofocus>
           <small class="text-muted d-block mt-1">Montant mensuel en FCFA</small>
         </div>
-        <div class="d-flex justify-content-center flex-wrap mb-4" style="gap:8px;">
+        <div class="ny-modal-quick-chips">
           <button type="button" class="btn btn-sm btn-outline-primary ny-modal-quick-chip" onclick="setModalQuickBudget(30000)">30 000 F</button>
           <button type="button" class="btn btn-sm btn-outline-primary ny-modal-quick-chip" onclick="setModalQuickBudget(50000)">50 000 F</button>
           <button type="button" class="btn btn-sm btn-outline-primary ny-modal-quick-chip" onclick="setModalQuickBudget(75000)">75 000 F</button>

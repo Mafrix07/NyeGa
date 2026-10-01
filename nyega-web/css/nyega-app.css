@@ -4,10 +4,35 @@
  */
 
 /* ==========================================================
+   GLOBAL RESETS & MOBILE FOUNDATIONS
+   ========================================================== */
+html {
+  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ==========================================================
    APP LAYOUT & WRAPPER
    ========================================================== */
 .ny-app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: var(--ny-background);
@@ -18,8 +43,14 @@
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  padding: 16px 16px calc(88px + env(safe-area-inset-bottom, 16px)) 16px; /* Safe-area mobile navbar */
+  padding: 14px 12px calc(80px + env(safe-area-inset-bottom, 16px)) 12px; /* Safe-area mobile navbar */
   flex: 1;
+}
+
+@media (min-width: 576px) {
+  .ny-main-container {
+    padding: 18px 16px calc(88px + env(safe-area-inset-bottom, 16px)) 16px;
+  }
 }
 
 /* Tablette (768px à 1024px) */
@@ -57,10 +88,16 @@
 .ny-header-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 12px 20px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+@media (min-width: 576px) {
+  .ny-header-inner {
+    padding: 12px 20px;
+  }
 }
 
 .ny-brand-title {
@@ -280,7 +317,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(68px + env(safe-area-inset-bottom, 0px));
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
@@ -306,19 +343,28 @@
   align-items: center;
   justify-content: center;
   min-height: 48px;
-  min-width: 44px;
-  padding: 6px 0;
+  min-width: 0;
+  padding: 4px 2px;
   color: var(--ny-on-surface-variant);
   text-decoration: none;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: var(--ny-transition);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ny-bottom-tab span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .ny-bottom-tab i {
   font-size: 18px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   transition: var(--ny-transition);
 }
 
@@ -389,32 +435,58 @@
   border-radius: var(--ny-radius);
   border: 1px solid var(--ny-outline);
   box-shadow: var(--ny-shadow-sm);
-  padding: 24px;
-  margin-bottom: 20px;
+  padding: 16px 14px;
+  margin-bottom: 16px;
   transition: var(--ny-transition);
+}
+
+@media (min-width: 576px) {
+  .ny-card {
+    padding: 24px;
+    margin-bottom: 20px;
+  }
 }
 
 .ny-card:hover {
   box-shadow: var(--ny-shadow);
 }
 
+/* Empêche tout débordement de grille Bootstrap dans les cartes sur mobile */
+.ny-card .row {
+  margin-left: -8px;
+  margin-right: -8px;
+}
+
+.ny-card .row > [class*="col-"] {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 .ny-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--ny-outline);
 }
 
 .ny-card-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--ny-primary);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+@media (min-width: 576px) {
+  .ny-card-title {
+    font-size: 18px;
+  }
 }
 
 /* ==========================================================
@@ -448,12 +520,19 @@
   background: linear-gradient(135deg, var(--ny-primary) 0%, #001B49 100%);
   color: #FFFFFF;
   border-radius: var(--ny-radius-lg);
-  padding: 28px 24px;
+  padding: 18px 16px;
   position: relative;
   overflow: hidden;
   box-shadow: var(--ny-shadow);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   border: none;
+}
+
+@media (min-width: 576px) {
+  .ny-budget-hero-card {
+    padding: 28px 24px;
+    margin-bottom: 24px;
+  }
 }
 
 .ny-budget-hero-card::after {
@@ -470,31 +549,57 @@
 
 .ny-budget-hero-top {
   display: flex;
+  flex-direction: column-reverse;
   align-items: flex-start;
-  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
+@media (min-width: 576px) {
+  .ny-budget-hero-top {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+}
+
 .ny-budget-hero-label {
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   color: rgba(255, 255, 255, 0.75);
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+@media (min-width: 576px) {
+  .ny-budget-hero-label {
+    font-size: 13px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
 }
 
 .ny-budget-remaining-amount {
-  font-size: 40px;
+  font-size: 30px;
   font-family: var(--ny-font-heading);
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.1;
   color: #FFFFFF;
+  word-break: break-word;
+}
+
+@media (min-width: 480px) {
+  .ny-budget-remaining-amount {
+    font-size: 38px;
+  }
 }
 
 @media (min-width: 576px) {
   .ny-budget-remaining-amount {
     font-size: 48px;
+    line-height: 1;
   }
 }
 
@@ -503,12 +608,19 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: var(--ny-radius-full);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
   text-transform: uppercase;
+}
+
+@media (min-width: 576px) {
+  .ny-status-pill {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
 }
 
 /* Vert d'état sémantique (distinct du vert de marque #10B982) */
@@ -532,15 +644,29 @@
 
 /* Barre de progression budget */
 .ny-progress-wrap {
-  margin: 20px 0 16px 0;
+  margin: 16px 0 14px 0;
+}
+
+@media (min-width: 576px) {
+  .ny-progress-wrap {
+    margin: 20px 0 16px 0;
+  }
 }
 
 .ny-progress-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.85);
   margin-bottom: 8px;
+}
+
+@media (min-width: 576px) {
+  .ny-progress-labels {
+    font-size: 13px;
+  }
 }
 
 .ny-progress-bar-bg {
@@ -573,35 +699,61 @@
 .ny-daily-card {
   background: #FFFFFF;
   border-radius: var(--ny-radius);
-  padding: 20px;
+  padding: 14px 16px;
   border-left: 6px solid var(--ny-secondary);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 16px;
   box-shadow: var(--ny-shadow-sm);
+}
+
+@media (min-width: 576px) {
+  .ny-daily-card {
+    padding: 20px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
 }
 
 .ny-daily-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+}
+
+@media (min-width: 576px) {
+  .ny-daily-left {
+    gap: 16px;
+  }
 }
 
 .ny-daily-icon {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: var(--ny-secondary-container);
   color: var(--ny-on-secondary-container);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 576px) {
+  .ny-daily-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
 }
 
 .ny-daily-title {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--ny-on-surface-variant);
   text-transform: uppercase;
   font-weight: 700;
@@ -609,17 +761,43 @@
   margin-bottom: 2px;
 }
 
+@media (min-width: 576px) {
+  .ny-daily-title {
+    font-size: 13px;
+  }
+}
+
 .ny-daily-amount {
-  font-size: 26px;
+  font-size: 20px;
   font-family: var(--ny-font-heading);
   font-weight: 900;
   color: var(--ny-primary);
 }
 
+@media (min-width: 576px) {
+  .ny-daily-amount {
+    font-size: 26px;
+  }
+}
+
 .ny-daily-right {
-  text-align: right;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--ny-text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px dashed var(--ny-outline);
+}
+
+@media (min-width: 576px) {
+  .ny-daily-right {
+    text-align: right;
+    display: block;
+    padding-top: 0;
+    border-top: none;
+    font-size: 13px;
+  }
 }
 
 /* Quick summary row */
@@ -758,8 +936,8 @@
 .ny-form-control {
   width: 100%;
   min-height: 44px;
-  padding: 12px 16px;
-  font-size: 15px;
+  padding: 12px 14px;
+  font-size: 16px; /* Empêche le zoom auto forcé sur iOS Safari */
   font-family: var(--ny-font-body);
   color: var(--ny-on-surface);
   background-color: #FFFFFF;
@@ -775,49 +953,61 @@
 }
 
 .ny-input-amount {
-  font-size: 32px;
+  font-size: 26px;
   font-family: var(--ny-font-heading);
   font-weight: 800;
   text-align: center;
   color: var(--ny-primary);
-  padding: 16px;
+  padding: 12px;
 }
 
-/* Quick Amount Pills */
+@media (min-width: 576px) {
+  .ny-input-amount {
+    font-size: 32px;
+    padding: 16px;
+  }
+}
+
+/* Quick Amount Pills (Grille 3 colonnes sur mobile, 6 colonnes sur tablette/desktop) */
 .ny-quick-amounts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   margin-top: 10px;
   margin-bottom: 20px;
 }
 
 @media (min-width: 768px) {
   .ny-quick-amounts {
-    display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 10px;
   }
 }
 
 .ny-quick-chip {
-  flex: 1;
-  min-width: 60px;
   min-height: 44px;
-  padding: 10px 12px;
+  padding: 8px 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--ny-surface-variant);
   border: 1px solid var(--ny-outline);
   border-radius: var(--ny-radius-sm);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--ny-primary);
   text-align: center;
   cursor: pointer;
   transition: var(--ny-transition);
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 576px) {
+  .ny-quick-chip {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
 }
 
 .ny-quick-chip:hover {
@@ -837,26 +1027,46 @@
   background: var(--ny-surface-variant);
   border: 1px dashed var(--ny-outline-variant);
   border-radius: var(--ny-radius);
-  padding: 14px 18px;
+  padding: 12px 14px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
   margin-bottom: 20px;
+}
+
+@media (min-width: 576px) {
+  .ny-auto-category-box {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    gap: 16px;
+  }
 }
 
 .ny-auto-category-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   min-height: 44px;
   padding: 8px 16px;
   border-radius: var(--ny-radius-full);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: var(--ny-transition);
   border: 1px solid transparent;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 576px) {
+  .ny-auto-category-pill {
+    font-size: 14px;
+    justify-content: flex-start;
+  }
 }
 
 .ny-auto-category-pill:hover {
@@ -1033,9 +1243,18 @@
    ========================================================== */
 .ny-history-filters {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 576px) {
+  .ny-history-filters {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
 }
 
 @media (min-width: 768px) {
@@ -1044,15 +1263,23 @@
     grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
-
-  .ny-filter-select {
-    min-width: 0;
-  }
 }
 
 .ny-filter-select {
-  flex: 1;
-  min-width: 150px;
+  width: 100%;
+}
+
+@media (min-width: 576px) {
+  .ny-filter-select {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+@media (min-width: 768px) {
+  .ny-filter-select {
+    min-width: 0;
+  }
 }
 
 .ny-expense-list {
@@ -1065,11 +1292,20 @@
   background: #FFFFFF;
   border: 1px solid var(--ny-outline);
   border-radius: var(--ny-radius);
-  padding: 16px 18px;
+  padding: 12px 14px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 10px;
   transition: var(--ny-transition);
+}
+
+@media (min-width: 576px) {
+  .ny-expense-item {
+    padding: 16px 18px;
+    align-items: center;
+    gap: 14px;
+  }
 }
 
 .ny-expense-item:hover {
@@ -1079,54 +1315,102 @@
 
 .ny-expense-left {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  align-items: flex-start;
+  gap: 10px;
   min-width: 0;
   flex: 1;
 }
 
+@media (min-width: 576px) {
+  .ny-expense-left {
+    align-items: center;
+    gap: 14px;
+  }
+}
+
 .ny-expense-cat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
   flex-shrink: 0;
+}
+
+@media (min-width: 576px) {
+  .ny-expense-cat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 18px;
+  }
 }
 
 .ny-expense-title {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 1.3;
   color: var(--ny-on-surface);
   margin-bottom: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-word;
+}
+
+@media (min-width: 576px) {
+  .ny-expense-title {
+    font-size: 15px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;
+    line-height: inherit;
+  }
 }
 
 .ny-expense-meta {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ny-on-surface-variant);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+@media (min-width: 576px) {
+  .ny-expense-meta {
+    font-size: 12px;
+    gap: 8px;
+    margin-top: 0;
+  }
 }
 
 .ny-expense-right {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
   flex-shrink: 0;
-  margin-left: auto;
   text-align: right;
+  margin-left: 6px;
 }
 
-/* Bug 2 : Montant insécable sur une seule ligne avec le signe '-' */
+@media (min-width: 576px) {
+  .ny-expense-right {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    margin-left: auto;
+  }
+}
+
+/* Montant insécable sur une seule ligne avec le signe '-' */
 .ny-expense-amount {
-  font-size: 17px;
+  font-size: 15px;
   font-family: var(--ny-font-heading);
   font-weight: 800;
   color: var(--ny-danger);
@@ -1136,16 +1420,28 @@
   letter-spacing: -0.2px;
 }
 
+@media (min-width: 576px) {
+  .ny-expense-amount {
+    font-size: 17px;
+  }
+}
+
 .ny-expense-actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
+}
+
+@media (min-width: 576px) {
+  .ny-expense-actions {
+    gap: 6px;
+  }
 }
 
 .ny-icon-btn {
-  width: 40px;
-  height: 40px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: var(--ny-radius-sm);
   border: 1px solid var(--ny-outline);
   background: #FFFFFF;
@@ -1155,7 +1451,18 @@
   justify-content: center;
   cursor: pointer;
   transition: var(--ny-transition);
-  font-size: 14px;
+  font-size: 13px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 576px) {
+  .ny-icon-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 14px;
+  }
 }
 
 .ny-icon-btn:hover {
@@ -1211,15 +1518,77 @@
 
 .ny-chart-wrapper {
   position: relative;
-  height: 280px;
-  margin: 20px 0;
+  height: 240px;
+  margin: 16px 0;
+}
+
+@media (min-width: 576px) {
+  .ny-chart-wrapper {
+    height: 280px;
+    margin: 20px 0;
+  }
 }
 
 .ny-analytics-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 480px) {
+  .ny-analytics-summary {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (min-width: 768px) {
+  .ny-analytics-summary {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+}
+
+.ny-stat-box {
+  background: #FFFFFF;
+  border-radius: var(--ny-radius);
+  border: 1px solid var(--ny-outline);
+  padding: 12px 14px;
+  box-shadow: var(--ny-shadow-sm);
+}
+
+@media (min-width: 576px) {
+  .ny-stat-box {
+    padding: 16px;
+  }
+}
+
+.ny-stat-box-label {
+  font-size: 11px;
+  color: var(--ny-on-surface-variant);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+@media (min-width: 576px) {
+  .ny-stat-box-label {
+    font-size: 12px;
+  }
+}
+
+.ny-stat-box-value {
+  font-size: 18px;
+  font-family: var(--ny-font-heading);
+  font-weight: 800;
+  color: var(--ny-primary);
+}
+
+@media (min-width: 576px) {
+  .ny-stat-box-value {
+    font-size: 20px;
+  }
 }
 
 .ny-breakdown-table {
@@ -1229,17 +1598,29 @@
 
 .ny-breakdown-table th {
   text-align: left;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   color: var(--ny-on-surface-variant);
-  padding: 10px 14px;
+  padding: 8px 10px;
   border-bottom: 2px solid var(--ny-outline);
 }
 
 .ny-breakdown-table td {
-  padding: 12px 14px;
-  font-size: 14px;
+  padding: 10px 10px;
+  font-size: 13px;
   border-bottom: 1px solid var(--ny-outline);
+}
+
+@media (min-width: 576px) {
+  .ny-breakdown-table th {
+    font-size: 12px;
+    padding: 10px 14px;
+  }
+
+  .ny-breakdown-table td {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
 }
 
 /* ==========================================================
@@ -1247,11 +1628,18 @@
    ========================================================== */
 .ny-auth-wrapper {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: 16px 12px;
   background: linear-gradient(135deg, #F0F4FA 0%, #FFFFFF 100%);
+}
+
+@media (min-width: 576px) {
+  .ny-auth-wrapper {
+    padding: 24px 16px;
+  }
 }
 
 .ny-auth-card {
@@ -1260,26 +1648,51 @@
   background: #FFFFFF;
   border-radius: var(--ny-radius-lg);
   box-shadow: var(--ny-shadow-lg);
-  padding: 36px 30px;
+  padding: 24px 18px;
   border: 1px solid var(--ny-outline);
   text-align: center;
 }
 
+@media (min-width: 576px) {
+  .ny-auth-card {
+    padding: 36px 30px;
+  }
+}
+
 .ny-auth-logo-wrap {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 576px) {
+  .ny-auth-logo-wrap {
+    margin-bottom: 20px;
+  }
 }
 
 .ny-auth-logo-img {
-  max-width: 190px;
+  max-width: 160px;
   height: auto;
   margin: 0 auto;
   display: block;
 }
 
+@media (min-width: 576px) {
+  .ny-auth-logo-img {
+    max-width: 190px;
+  }
+}
+
 .ny-auth-subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--ny-on-surface-variant);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 576px) {
+  .ny-auth-subtitle {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
 }
 
 .ny-auth-tabs {
@@ -1287,20 +1700,34 @@
   background: var(--ny-surface-variant);
   border-radius: var(--ny-radius-sm);
   padding: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 576px) {
+  .ny-auth-tabs {
+    margin-bottom: 24px;
+  }
 }
 
 .ny-auth-tab {
   flex: 1;
-  padding: 10px 16px;
+  padding: 10px 14px;
   border-radius: var(--ny-radius-sm);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--ny-on-surface-variant);
   cursor: pointer;
   border: none;
   background: transparent;
   transition: var(--ny-transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 576px) {
+  .ny-auth-tab {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
 }
 
 .ny-auth-tab.active {
@@ -1375,20 +1802,26 @@
   border-radius: 20px 20px 0 0; /* Rounded top on mobile */
   max-width: 100%;
   width: 100%;
-  padding: 20px 20px max(24px, env(safe-area-inset-bottom, 24px)) 20px;
+  padding: 18px 16px max(24px, env(safe-area-inset-bottom, 24px)) 16px;
   box-shadow: var(--ny-shadow-lg);
   max-height: 85vh;
   overflow-y: auto;
   animation: nySlideUp 0.25s ease-out;
 }
 
+@media (min-width: 576px) {
+  .ny-modal-box {
+    padding: 24px 20px max(24px, env(safe-area-inset-bottom, 24px)) 20px;
+  }
+}
+
 /* Poignée de drag mobile */
 .ny-modal-handle {
-  width: 40px;
+  width: 36px;
   height: 4px;
   background: #CBD5E1;
   border-radius: var(--ny-radius-full);
-  margin: 0 auto 16px auto;
+  margin: 0 auto 14px auto;
   display: block;
 }
 
@@ -1407,6 +1840,7 @@
   background: transparent;
   border: none;
   transition: var(--ny-transition);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .ny-modal-box .close:hover,
@@ -1414,15 +1848,32 @@
   opacity: 1;
 }
 
+/* Grille de puces rapides dans la modale budget initial (2 colonnes mobile, 4 desktop) */
+.ny-modal-quick-chips {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .ny-modal-quick-chips {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 /* Puces de montant dans la modale budget initial (>= 44x44px) */
 .ny-modal-quick-chip {
   min-height: 44px;
-  min-width: 72px;
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 13px;
   border-radius: var(--ny-radius-sm);
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Bug 1 : Badge de catégorie non-interactif dans les listes de dépenses (Accueil et Historique) */
