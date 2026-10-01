@@ -901,8 +901,8 @@ img {
 }
 
 .ny-btn-danger:hover {
-  background-color: #B91C1C;
-  color: #FFFFFF;
+  background-color: var(--ny-danger-hover, #B91C1C);
+  color: var(--ny-on-danger);
 }
 
 .ny-btn-block {
@@ -1819,7 +1819,7 @@ img {
 .ny-modal-handle {
   width: 36px;
   height: 4px;
-  background: #CBD5E1;
+  background: var(--ny-outline-variant);
   border-radius: var(--ny-radius-full);
   margin: 0 auto 14px auto;
   display: block;

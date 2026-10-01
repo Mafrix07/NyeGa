@@ -56,6 +56,7 @@
      BRAND IDENTITY (Extracted directly from NyeGa Logo)
      ========================================================== */
   /* Primary: Bleu Marine (Texte "Nye" & Capuchon étudiant) */
+  --ny-primary-dark: #0A1F4D; /* Header principal, hero card sombre — contraste blanc: 12.8:1 AAA */
   --ny-primary: #002D7A;
   --ny-on-primary: #FFFFFF;
   --ny-primary-hover: #001F56;
@@ -63,13 +64,17 @@
   --ny-on-primary-container: #001A4D;
 
   /* Secondary / Accent: Vert Teal (Texte "Ga" & Feuille de croissance) */
-  --ny-secondary: #10B982;
+  /* WCAG: #047857 sur blanc = 5.48:1 (AA) — usage texte/icône sur fond clair */
+  /* WCAG: #10B982 sur blanc = 2.54:1 (ÉCHEC) — usage décoratif/fond sombre UNIQUEMENT */
+  --ny-secondary: #047857;         /* Vert de marque accessible sur fond clair */
+  --ny-secondary-teal: #10B982;    /* Teal vif — fond sombre ou éléments décoratifs UNIQUEMENT */
   --ny-on-secondary: #FFFFFF;
-  --ny-secondary-hover: #059669;
+  --ny-secondary-hover: #065F46;
   --ny-secondary-container: #D1FAE5;
   --ny-on-secondary-container: #064E3B;
 
   /* Tertiary: Doré / Jaune (Croissant dynamique & Gland du capuchon) */
+  /* WCAG: #FBB418 sur #0A1F4D = 7.1:1 (AAA) | sur blanc = 1.80:1 (INTERDIT) */
   --ny-tertiary: #FBB418;
   --ny-on-tertiary: #002D7A; /* Note: Utilise le bleu marine pour assurer un contraste WCAG AAA (7.03:1) */
   --ny-tertiary-hover: #E5A110;
@@ -78,6 +83,8 @@
 
   /* Danger / Alerte critique: Rouge standard (WCAG AA conforme) */
   --ny-danger: #DC2626;
+  --ny-danger-hover: #B91C1C;              /* Hover bouton danger (rouge plus sombre) */
+  --ny-danger-border: rgba(220, 38, 38, 0.25); /* Bordure subtile sur fond danger-container */
   --ny-on-danger: #FFFFFF;
   --ny-danger-container: #FEE2E2;
   --ny-on-danger-container: #7F1D1D;

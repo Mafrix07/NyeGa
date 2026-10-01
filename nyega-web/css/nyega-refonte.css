@@ -868,8 +868,8 @@ h3, h4, h5, .ny-text-h3 {
 
 /* Carte suppression de compte — bord rouge */
 #screen-budget .ny-card[style*="#FFF5F5"] {
-  border: 1.5px solid rgba(220, 38, 38, 0.25) !important;
-  background: #FFF8F8 !important;
+  border: 1.5px solid var(--ny-danger-border) !important;
+  background: var(--ny-danger-container) !important;
   border-radius: var(--ny-radius);
 }
 #screen-budget .ny-card[style*="#FFF5F5"] h5 {
