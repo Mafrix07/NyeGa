@@ -22,11 +22,12 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@supabase/supabase-js": "^2.39.8",
-    "chart.js": "^4.4.2",
+    "@vercel/analytics": "^2.0.1",
     "bootstrap": "^4.6.2",
+    "chart.js": "^4.4.2",
+    "font-awesome": "^4.7.0",
     "jquery": "^3.7.1",
-    "popper.js": "^1.16.1",
-    "font-awesome": "^4.7.0"
+    "popper.js": "^1.16.1"
   },
   "devDependencies": {
     "serve": "^14.2.1"
