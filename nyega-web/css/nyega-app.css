@@ -1081,6 +1081,8 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
+  flex: 1;
 }
 
 .ny-expense-cat-icon {
@@ -1099,6 +1101,9 @@
   font-size: 15px;
   color: var(--ny-on-surface);
   margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ny-expense-meta {
@@ -1107,19 +1112,28 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .ny-expense-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  flex-shrink: 0;
+  margin-left: auto;
+  text-align: right;
 }
 
+/* Bug 2 : Montant insécable sur une seule ligne avec le signe '-' */
 .ny-expense-amount {
   font-size: 17px;
   font-family: var(--ny-font-heading);
   font-weight: 800;
   color: var(--ny-danger);
+  white-space: nowrap !important;
+  display: inline-block;
+  text-align: right;
+  letter-spacing: -0.2px;
 }
 
 .ny-expense-actions {
@@ -1411,12 +1425,23 @@
   border-radius: var(--ny-radius-sm);
 }
 
-/* Pastilles de catégorie cliquables dans les listes de dépenses */
-.ny-expense-item .badge[onclick] {
-  min-height: 36px;
+/* Bug 1 : Badge de catégorie non-interactif dans les listes de dépenses (Accueil et Historique) */
+.ny-expense-item .badge,
+.ny-expense-meta .badge {
+  cursor: default !important;
+  pointer-events: none !important;
+  user-select: none;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Suppression de la flèche déroulante ⌄ pour éliminer toute apparence de menu select/dropdown */
+.ny-expense-item .badge .fa-caret-down,
+.ny-expense-meta .badge .fa-caret-down {
+  display: none !important;
 }
 
 @media (min-width: 768px) {
