@@ -59,3 +59,7 @@ build/
 tmp/
 scratch/
 *.csv
+prompt*.txt
+PT3.txt
+REPONSE_PT3.txt
+responsive.txt
