@@ -348,18 +348,23 @@
     // BUDGET (FCFA)
     // -------------------------------------------------------------
     getBudget: async function() {
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
       if (this.isLive()) {
         try {
           const user = await this.getUser();
           if (user) {
+            // Clôture côté serveur des budgets dont period_end est dépassé (idempotente, fuseau Africa/Lome)
+            try {
+              await client.rpc('close_expired_budgets');
+            } catch (rpcErr) {
+              // La fonction n'existe pas encore en base : on continue sans bloquer
+              console.warn('close_expired_budgets non disponible:', rpcErr.message);
+            }
+
             const { data, error } = await client
               .from('budgets')
               .select('*')
               .eq('user_id', user.id)
+              .eq('status', 'active')
               .order('created_at', { ascending: false })
               .limit(1);
 
@@ -367,7 +372,7 @@
             if (data && data.length > 0) {
               return data[0];
             } else {
-              return null; // Aucun budget défini pour le moment
+              return null; // Aucun budget actif (expiré ou jamais défini)
             }
           }
         } catch (e) {
@@ -386,6 +391,7 @@
             monthly_amount: Math.round(parseFloat(budgetData.monthly_amount)),
             period_start: budgetData.period_start,
             period_end: budgetData.period_end,
+            status: 'active',
             updated_at: new Date().toISOString()
           };
 
@@ -393,6 +399,7 @@
             .from('budgets')
             .select('id')
             .eq('user_id', user.id)
+            .eq('status', 'active')
             .limit(1);
 
           if (existing && existing.length > 0) {
@@ -415,6 +422,23 @@
       }
       LocalStore.saveBudget(budgetData);
       return budgetData;
+    },
+
+    // Vérifie si l'utilisateur a au moins un budget clôturé (status='closed')
+    // Utilisé pour distinguer "budget expiré" de "jamais configuré"
+    _checkHasClosedBudget: async function(userId) {
+      if (!this.isLive() || !userId) return false;
+      try {
+        const { data } = await client
+          .from('budgets')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('status', 'closed')
+          .limit(1);
+        return data && data.length > 0;
+      } catch (e) {
+        return false;
+      }
     },
 
     // -------------------------------------------------------------
