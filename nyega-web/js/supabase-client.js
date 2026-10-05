@@ -73,6 +73,21 @@
       }
       localStorage.setItem('nyega_user_rules', JSON.stringify(rules));
       return rules;
+    },
+    getCaisseMovements: function() {
+      const data = localStorage.getItem('nyega_demo_caisse_movements');
+      return data ? JSON.parse(data) : [];
+    },
+    getCaisseBalance: function() {
+      const movs = this.getCaisseMovements();
+      const sum = movs.reduce((acc, m) => acc + (Number(m.amount) || 0), 0);
+      return Math.max(0, sum);
+    },
+    saveCaisseMovement: function(movement) {
+      const movs = this.getCaisseMovements();
+      movs.unshift(movement);
+      localStorage.setItem('nyega_demo_caisse_movements', JSON.stringify(movs));
+      return movement;
     }
   };
 
@@ -556,6 +571,42 @@
       }
 
       return true;
+    },
+
+    // -------------------------------------------------------------
+    // CAISSE (ÉPARGNE ÉTUDIANTE EN FCFA)
+    // -------------------------------------------------------------
+    getCaisseBalance: async function() {
+      if (this.isLive()) {
+        try {
+          const { data, error } = await client.rpc('caisse_balance');
+          if (error) throw error;
+          const balance = typeof data === 'number' ? data : (parseInt(data, 10) || 0);
+          return Math.max(0, balance);
+        } catch (e) {
+          console.warn('Erreur lecture caisse_balance RPC:', e.message);
+        }
+      }
+      return LocalStore.getCaisseBalance();
+    },
+
+    getCaisseMovements: async function() {
+      if (this.isLive()) {
+        try {
+          const user = await this.getUser();
+          if (!user) return [];
+          const { data, error } = await client
+            .from('caisse_movements')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+          if (error) throw error;
+          return data || [];
+        } catch (e) {
+          console.warn('Erreur lecture caisse_movements:', e.message);
+        }
+      }
+      return LocalStore.getCaisseMovements();
     }
   };
 

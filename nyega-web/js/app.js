@@ -1106,47 +1106,90 @@
     return `"${str.replace(/"/g, '""')}"`;
   }
 
-  function exportExpensesCSV() {
-    if (!state.expenses || state.expenses.length === 0) {
-      showToast('Aucune dépense à exporter.');
-      return;
+  async function exportCaisseCSV() {
+    try {
+      const movements = await NyegaDB.getCaisseMovements();
+      if (!movements || movements.length === 0) {
+        return false;
+      }
+      const headers = ['Date', 'Montant (FCFA)', 'Type', 'Note'];
+      const rows = movements.map(m => {
+        const cleanDate = sanitizeCSVField(m.created_at ? m.created_at.split('T')[0] : '');
+        const cleanAmount = Math.round(Number(m.amount) || 0);
+        const cleanType = sanitizeCSVField(m.type || '');
+        const cleanNote = sanitizeCSVField(m.note || '');
+        return [cleanDate, cleanAmount, cleanType, cleanNote].join(';');
+      });
+      const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const today = new Date().toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      link.setAttribute('download', `nyega_caisse_${today}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return true;
+    } catch (e) {
+      console.warn('Erreur export caisse CSV:', e);
+      return false;
+    }
+  }
+
+  async function exportExpensesCSV() {
+    let hasExportedAny = false;
+
+    if (state.expenses && state.expenses.length > 0) {
+      const headers = ['Date', 'Montant (FCFA)', 'Catégorie', 'Moyen de Paiement', 'Description'];
+      const rows = state.expenses.map(exp => {
+        const cat = state.categories.find(c => c.id === exp.category_id);
+        const catName = cat ? cat.name : 'Autres';
+        const cleanDate = sanitizeCSVField(exp.expense_date || '');
+        const cleanAmount = Math.round(Number(exp.amount) || 0);
+        const cleanCat = sanitizeCSVField(catName);
+        const cleanPay = sanitizeCSVField(exp.payment_method || 'Espèces');
+        const cleanDesc = sanitizeCSVField(exp.description || '');
+        return [
+          cleanDate,
+          cleanAmount,
+          cleanCat,
+          cleanPay,
+          cleanDesc
+        ].join(';');
+      });
+
+      const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const today = new Date().toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      link.setAttribute('download', `nyega_depenses_${today}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      hasExportedAny = true;
     }
 
-    const headers = ['Date', 'Montant (FCFA)', 'Catégorie', 'Moyen de Paiement', 'Description'];
-    const rows = state.expenses.map(exp => {
-      const cat = state.categories.find(c => c.id === exp.category_id);
-      const catName = cat ? cat.name : 'Autres';
-      const cleanDate = sanitizeCSVField(exp.expense_date || '');
-      const cleanAmount = Math.round(Number(exp.amount) || 0);
-      const cleanCat = sanitizeCSVField(catName);
-      const cleanPay = sanitizeCSVField(exp.payment_method || 'Espèces');
-      const cleanDesc = sanitizeCSVField(exp.description || '');
-      return [
-        cleanDate,
-        cleanAmount,
-        cleanCat,
-        cleanPay,
-        cleanDesc
-      ].join(';');
-    });
+    // Inclusion des mouvements de caisse dans l'export des données
+    const caisseExported = await exportCaisseCSV();
+    if (caisseExported) {
+      hasExportedAny = true;
+    }
 
-    const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const today = new Date().toISOString().split('T')[0];
-    link.setAttribute('href', url);
-    link.setAttribute('download', `nyega_depenses_${today}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Export CSV téléchargé avec succès !');
+    if (!hasExportedAny) {
+      showToast('Aucune donnée (dépense ou caisse) à exporter.');
+    } else {
+      showToast('Export des données téléchargé avec succès !');
+    }
   }
 
   async function handleDeleteAccount() {
     const msg = "⚠️ ATTENTION : La suppression de votre compte est définitive et irréversible.\n\n" +
-      "Toutes vos dépenses, vos budgets, vos règles personnalisées et votre profil seront définitivement effacés conformément à la Loi 2019-014.\n\n" +
+      "Toutes vos dépenses, vos budgets, vos mouvements de caisse, vos règles personnalisées et votre profil seront définitivement effacés conformément à la Loi 2019-014.\n\n" +
       "Voulez-vous vraiment continuer ?";
     if (!confirm(msg)) return;
 
@@ -1190,6 +1233,7 @@
   window.closeConfigModal = closeConfigModal;
   window.handleSaveConfig = handleSaveConfig;
   window.exportExpensesCSV = exportExpensesCSV;
+  window.exportCaisseCSV = exportCaisseCSV;
   window.handleDeleteAccount = handleDeleteAccount;
 
 })(window);
