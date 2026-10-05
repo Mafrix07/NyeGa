@@ -896,8 +896,8 @@
     const endDate = document.getElementById('budgetEndDate').value;
 
     const amount = Math.round(parseFloat(amountVal));
-    if (!amount || amount < 0) {
-      showToast('Veuillez spécifier un budget valide en FCFA');
+    if (!amount || amount <= 0) {
+      showToast('Veuillez spécifier un budget valide en FCFA (entier positif)');
       return;
     }
 

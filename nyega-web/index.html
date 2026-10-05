@@ -359,7 +359,7 @@
         <form id="formBudgetSettings" onsubmit="handleSaveBudget(event)">
           <div class="ny-form-group">
             <label for="budgetAmount">Montant du budget mensuel (en FCFA)</label>
-            <input type="number" step="500" min="0" id="budgetAmount" class="ny-form-control font-weight-bold text-primary" style="font-size: 24px;" placeholder="50000" required>
+            <input type="number" step="1" min="1" id="budgetAmount" class="ny-form-control font-weight-bold text-primary" style="font-size: 24px;" placeholder="50000" required>
             <small class="text-muted">Exemple : 50 000 FCFA pour le mois d'un étudiant à Lomé.</small>
           </div>
 
@@ -542,7 +542,7 @@
       </div>
       <form onsubmit="handleInitialModalBudgetSubmit(event)">
         <div class="ny-form-group">
-          <input type="number" id="initialModalBudgetAmount" class="ny-form-control text-center font-weight-bold" style="font-size:26px; color:var(--ny-primary);" placeholder="Ex: 50000" min="1000" step="500" required autofocus>
+          <input type="number" step="1" min="1" id="initialModalBudgetAmount" class="ny-form-control text-center font-weight-bold" style="font-size:26px; color:var(--ny-primary);" placeholder="Ex: 50000" required autofocus>
           <small class="text-muted d-block mt-1">Montant mensuel en FCFA</small>
         </div>
         <div class="ny-modal-quick-chips">
