@@ -109,12 +109,29 @@
     initBudgetForm();
     setDefaultExpenseDate();
 
-    // ONBOARDING STRICT : Si l'étudiant n'a pas encore défini son budget (ou a fermé la fenêtre),
-    // au prochain chargement on le redirige immédiatement vers la saisie du budget au lieu d'afficher un accueil vide.
+    // ONBOARDING / BUDGET EXPIRÉ
+    // getBudget() renvoie null dans deux cas :
+    //   1. Jamais configuré → modale onboarding
+    //   2. Budget expiré (status passé à 'closed' par close_expired_budgets) → redirection + toast
     if (!state.budget) {
       window.location.hash = '#budget';
       navigateToScreen('budget', false);
-      openInitialBudgetModal();
+      // Détection : si un budget expiré existe, on affiche un message différent de l'onboarding
+      if (NyegaDB.isLive()) {
+        NyegaDB.getUser().then(function(u) {
+          if (!u) return;
+          // Vérifie s'il existe un budget clôturé (sans bloquer l'affichage)
+          window.NyegaDB._checkHasClosedBudget(u.id).then(function(hasClosed) {
+            if (hasClosed) {
+              showToast('⏰ Votre période budgétaire est terminée. Définissez un nouveau budget pour continuer.', 5000);
+            } else {
+              openInitialBudgetModal();
+            }
+          });
+        });
+      } else {
+        openInitialBudgetModal();
+      }
     } else {
       handleHashNavigation();
       renderDashboard();
