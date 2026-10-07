@@ -136,6 +136,39 @@
               <span class="small text-muted" id="homePeriodEnd">Jusqu'au --</span>
             </div>
           </div>
+
+          <!-- Notice discrète pour dépenses antérieures -->
+          <div id="homePreviousPeriodNotice" class="text-muted small mt-2 mb-3" style="display:none; font-size:12px;">
+            <i class="fa fa-info-circle mr-1 text-primary"></i> Les dépenses d'avant le <strong id="homePeriodStartDateNotice">--</strong> comptent pour ta période précédente.
+          </div>
+
+          <!-- Carte "Ma caisse" (Épargne & Économies) -->
+          <div class="ny-card ny-caisse-card mt-3" id="homeCaisseCard" style="border-left: 4px solid var(--ny-primary);">
+            <div class="ny-card-header d-flex justify-content-between align-items-center mb-2">
+              <h3 class="ny-card-title mb-0" style="font-size: 16px;">
+                <i class="fa fa-archive mr-1" style="color:var(--ny-primary);"></i> Ma caisse
+              </h3>
+              <span class="badge badge-light border" id="homeCaisseBadge">Épargne</span>
+            </div>
+            <div class="mb-3">
+              <div class="small text-muted font-weight-bold">Solde disponible</div>
+              <div class="h3 font-weight-bold mb-0" id="homeCaisseBalance" style="color:var(--ny-primary);">
+                -- FCFA
+              </div>
+            </div>
+            <div>
+              <div class="small text-muted font-weight-bold mb-2">Derniers mouvements</div>
+              <div id="homeCaisseMovementsList" class="ny-caisse-movements">
+                <!-- Rendu dynamique -->
+              </div>
+              <div id="homeCaisseEmpty" class="text-muted small py-2" style="display:none;">
+                Aucun mouvement pour l'instant.
+              </div>
+              <div id="homeCaisseError" class="text-danger small font-weight-bold py-2" style="display:none;">
+                Caisse indisponible, réessaie
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Colonne 2 : Résumé Dépenses Récentes -->
@@ -219,6 +252,7 @@
               <div class="ny-form-group">
                 <label for="expenseDate">Date de la dépense</label>
                 <input type="date" id="expenseDate" class="ny-form-control" required>
+                <small id="expenseDateError" class="text-danger font-weight-bold mt-1 d-none" style="display:none;"></small>
               </div>
             </div>
             <div class="col-12 col-md-6">
@@ -260,6 +294,14 @@
         <!-- Filtres et Tri -->
         <div class="ny-history-filters">
           <div class="ny-filter-select">
+            <label class="small text-muted font-weight-bold mb-1">Période</label>
+            <select id="historyFilterPeriod" class="ny-form-control" onchange="loadHistoryExpenses()">
+              <option value="current">Cette période</option>
+              <option value="previous">Période précédente</option>
+              <option value="all">Tout</option>
+            </select>
+          </div>
+          <div class="ny-filter-select">
             <label class="small text-muted font-weight-bold mb-1">Filtrer par catégorie</label>
             <select id="historyFilterCategory" class="ny-form-control" onchange="loadHistoryExpenses()">
               <option value="all">Toutes les catégories</option>
@@ -283,6 +325,17 @@
         <!-- Liste des dépenses -->
         <div id="fullExpensesList" class="ny-expense-list">
           <!-- Chargement dynamique -->
+        </div>
+
+        <!-- Résumé des périodes terminées -->
+        <div id="historyClosedBudgetsContainer" class="mt-4 pt-3 border-top" style="display:none;">
+          <h3 class="ny-card-title mb-2" style="font-size:16px;">
+            <i class="fa fa-calendar-check-o mr-1" style="color:var(--ny-primary);"></i> Résumé des périodes terminées
+          </h3>
+          <p class="small text-muted mb-3">Historique des cycles précédents avec dates, budget alloué, total dépensé et reste ou dépassement.</p>
+          <div id="historyClosedBudgetsList">
+            <!-- Rendu dynamique -->
+          </div>
         </div>
       </div>
     </section>
@@ -356,6 +409,13 @@
           Ajustez votre budget alloué pour le mois ou le cycle en cours. L'accueil et le budget journalier recommandé seront immédiatement recalculés en FCFA.
         </p>
 
+        <!-- Proposer même budget, nouvelle période si pas de budget actif -->
+        <div id="boxNextPeriodBudget" class="mb-3" style="display:none;">
+          <button type="button" class="ny-btn ny-btn-outline ny-btn-block" id="btnNextPeriodBudget" onclick="handleProposeNextPeriodBudget()">
+            <i class="fa fa-repeat mr-2"></i> Même budget, nouvelle période
+          </button>
+        </div>
+
         <form id="formBudgetSettings" onsubmit="handleSaveBudget(event)">
           <div class="ny-form-group">
             <label for="budgetAmount">Montant du budget mensuel (en FCFA)</label>
@@ -368,6 +428,7 @@
               <div class="ny-form-group">
                 <label for="budgetStartDate">Début du cycle / période</label>
                 <input type="date" id="budgetStartDate" class="ny-form-control" required>
+                <small id="budgetStartDateHelp" class="text-muted d-none" style="display:none;">La date de début ne peut pas être changée.</small>
               </div>
             </div>
             <div class="col-12 col-md-6">
