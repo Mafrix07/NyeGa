@@ -219,3 +219,13 @@ Valider qu'à la création d'un compte, **aucun budget arbitraire de 50 000 FCFA
 | **T-08** | Mémoire : Mots vides | "zem pour aller chez ami" | Mot "zem" extrait, mots vides français ignorés | ✅ Conforme |
 | **T-09** | Mémoire : Réutilisation | Saisie future avec "zem" | Catégorisation locale sans appel IA | ✅ Conforme |
 | **T-10** | Budget à l'inscription | Nouveau compte créé | Écran demandant le budget mensuel, pas de 50k forcé | ✅ Conforme |
+| **T-11** | Caisse : Solde et mouvements | Compte connecté | Solde FCFA et 3 derniers mouvements affichés sur l'accueil | ✅ Conforme |
+| **T-12** | Caisse : Résilience hors-ligne | Supabase injoignable | Message "Caisse indisponible, réessaie", aucun repli local | ✅ Conforme |
+| **T-13** | Clôture automatique (reste) | Fin de cycle avec solde > 0 | `close_expired_budgets()` verse le reste dans la caisse | ✅ Conforme |
+| **T-14** | Clôture automatique (dépassement) | Fin de cycle avec dépassement | Toast bienveillant, aucun versement caisse | ✅ Conforme |
+| **T-15** | Clôture multiple consolidée | Plusieurs cycles expirés | Un unique toast consolidé sans duplication | ✅ Conforme |
+| **T-16** | Budget : Nouvelle période | Cycle précédent clos | Bouton "Même budget, nouvelle période" proposant J+1 | ✅ Conforme |
+| **T-17** | Budget : Date début verrouillée | Modification budget actif | `#budgetStartDate` disabled avec message explicatif | ✅ Conforme |
+| **T-18** | Dépense période clôturée | Saisie date dans cycle clos | Message près de la date sans perte de saisie | ✅ Conforme |
+| **T-19** | Historique : Filtre période | Choix du filtre de période | Affichage strict selon période et récapitulatif clos | ✅ Conforme |
+| **T-20** | Anti-injection CSV & Suppression | Export CSV / Effacement compte | Protection formule CWE-1236 et RPC `delete_user_account` | ✅ Conforme |

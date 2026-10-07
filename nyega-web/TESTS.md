@@ -70,8 +70,35 @@ $$;
 
 | Scénario | Attendu | Résultat |
 |---|---|---|
-| Budget avec `period_end` = hier → ouvrir l'app | Toast "Votre période budgétaire est terminée" + redirection écran Budget | |
-| Budget avec `period_end` = aujourd'hui → ouvrir l'app | Budget encore actif (non clôturé) | |
-| Jamais configuré → ouvrir l'app | Modale onboarding s'ouvre | |
-| Budget clôturé → configurer un nouveau budget | Nouveau budget `status='active'` enregistré, dashboard mis à jour | |
-| Appeler `close_expired_budgets()` deux fois | Aucun effet sur un budget déjà clôturé (idempotente) | |
+| Budget avec `period_end` = hier → ouvrir l'app | Toast "Votre période budgétaire est terminée" + redirection écran Budget | ✅ Validé |
+| Budget avec `period_end` = aujourd'hui → ouvrir l'app | Budget encore actif (non clôturé) | ✅ Validé |
+| Jamais configuré → ouvrir l'app | Modale onboarding s'ouvre | ✅ Validé |
+| Budget clôturé → configurer un nouveau budget | Nouveau budget `status='active'` enregistré, dashboard mis à jour | ✅ Validé |
+| Appeler `close_expired_budgets()` deux fois | Aucun effet sur un budget déjà clôturé (idempotente) | ✅ Validé |
+
+---
+
+## 🏦 Caisse d'épargne étudiante & Cycles de périodes (Fonctionnalités PT3)
+
+> ⚠️ Tests à exécuter sur compte de test avec Supabase connecté.
+
+### Cas de test Caisse & Cycles
+
+| Réf | Scénario | Données / Action | Comportement attendu |
+|---|---|---|---|
+| **C-01** | **Affichage solde caisse** | Ouverture de l'accueil avec mouvements existants | Solde affiché en FCFA (`formatFCFA`), 3 derniers mouvements avec dates et montants colorés (+ / -). |
+| **C-02** | **Caisse vide** | Nouvel utilisateur sans reste de budget | Carte "Ma caisse" affiche "0 FCFA" et message d'état vide : "Aucun mouvement pour l'instant." |
+| **C-03** | **Caisse indisponible (Résilience)** | Réseau coupé ou Supabase injoignable | Carte affiche message clair : "Caisse indisponible, réessaie". Aucun montant issu du cache local (strictement 0 repli local). |
+| **C-04** | **Clôture avec reste positif** | Budget 50 000 F, dépensé 38 000 F, période échue | Toast : *"Ta période est terminée. Il te restait 12 000 FCFA, ajoutés à ta caisse."*, versement immédiat dans la caisse. |
+| **C-05** | **Clôture avec dépassement** | Budget 40 000 F, dépensé 43 000 F, période échue | Toast bienveillant : *"Ta période est terminée avec un dépassement de 3 000 FCFA. C'est l'occasion de repartir du bon pied pour ta prochaine période !"*, aucun versement caisse. |
+| **C-06** | **Clôture multiple (Plusieurs périodes)** | Utilisateur absent 2 cycles complets | Un seul toast récapitulatif agrégé notifiant la clôture sans spam visuel. |
+| **C-07** | **Clôture au retour d'onglet (> 1 heure)** | Minuteur / inactivité onglet supérieure à 60 min | Événement `visibilitychange` déclenche automatiquement `close_expired_budgets()` sans rechargement de page. |
+| **C-08** | **Bouton "Même budget, nouvelle période"** | Période précédente terminée le 30 sept | Clic sur le bouton : pré-remplit la date de début au 1er oct (lendemain), montant identique, champ de date déverrouillé. |
+| **C-09** | **Verrouillage date début en modification** | Budget actif en cours de modification | `#budgetStartDate` est désactivé (`disabled`) avec texte : *"La date de début ne peut pas être changée."*. |
+| **C-10** | **Refus dépense sur période clôturée** | Saisie d'une dépense datée dans une période terminée | Rejet SQL capté : message *"Cette période est terminée, choisis une date plus récente."* affiché près du champ date. Saisie intégrale conservée sans perte. |
+| **C-11** | **Filtre historique par période** | Sélection "Cette période" / "Période précédente" / "Tout" | Filtre dynamique des dépenses selon l'intervalle temporel sélectionné. |
+| **C-12** | **Résumé des périodes terminées** | Écran Historique | Bloc récapitulatif affichant pour chaque cycle clos : dates, budget alloué, dépensé et badge solde (+ reste / - dépassement). |
+| **C-13** | **Notice d'antériorité accueil** | Accueil avec budget actif | Phrase discrète visible : *"Les dépenses d'avant le [date de début] comptent pour ta période précédente."*. |
+| **C-14** | **Neutralisation injection CSV (CWE-1236)** | Libellé dépense ou note débutant par `=`, `+`, `-`, `@` | Cellule neutralisée avec apostrophe de protection `'` dans l'export `nyega_depenses_*.csv` et `nyega_caisse_*.csv`. |
+| **C-15** | **Suppression de compte stricte (Loi 2019-014)** | Clic "Supprimer mon compte" et mot-clé "SUPPRIMER" | Appel RPC `delete_user_account`. Si échec : message d'erreur, pas de déconnexion. Si succès : `signOut()`, purge `localStorage` et redirection `auth.html`. |
+
