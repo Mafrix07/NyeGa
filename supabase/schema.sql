@@ -85,6 +85,26 @@ CREATE TABLE IF NOT EXISTS public.rate_limits (
 
 COMMENT ON TABLE public.rate_limits IS 'Compteur de requêtes IA (30 req/h) par étudiant pour categorize-expense';
 
+-- 8. TABLE DE LA CAISSE D'ÉPARGNE (Mouvements de solde)
+CREATE TABLE IF NOT EXISTS public.caisse_movements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    amount BIGINT NOT NULL CHECK (amount <> 0),
+    type TEXT NOT NULL CHECK (type IN ('leftover', 'withdrawal', 'adjustment')),
+    budget_id UUID NULL REFERENCES public.budgets(id) ON DELETE SET NULL,
+    note TEXT NULL CHECK (char_length(note) <= 200),
+    created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+COMMENT ON TABLE public.caisse_movements IS 'Mouvements de caisse d''épargne des étudiants (restes de budget, retraits, ajustements)';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_caisse_movements_budget_leftover
+    ON public.caisse_movements (budget_id)
+    WHERE type = 'leftover';
+
+CREATE INDEX IF NOT EXISTS idx_caisse_movements_user_id
+    ON public.caisse_movements (user_id, created_at DESC);
+
 -- ====================================================================
 -- ROW LEVEL SECURITY (RLS) - Isolation stricte par utilisateur
 -- ====================================================================
@@ -95,6 +115,7 @@ ALTER TABLE public.category_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.budgets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.caisse_movements ENABLE ROW LEVEL SECURITY;
 
 -- Politiques Profiles
 CREATE POLICY "Les utilisateurs voient leur propre profil"
@@ -172,6 +193,43 @@ DROP POLICY IF EXISTS "Les étudiants lisent leur propre rate limit" ON public.r
 REVOKE ALL ON public.rate_limits FROM anon, authenticated;
 GRANT ALL ON public.rate_limits TO service_role;
 
+-- Politiques Caisse Movements : SELECT uniquement pour son propriétaire, aucune écriture directe
+CREATE POLICY "Les étudiants lisent leurs propres mouvements de caisse"
+    ON public.caisse_movements FOR SELECT
+    USING (auth.uid() = user_id);
+
+REVOKE INSERT, UPDATE, DELETE ON public.caisse_movements FROM anon, authenticated;
+GRANT SELECT ON public.caisse_movements TO authenticated;
+GRANT ALL ON public.caisse_movements TO service_role;
+
+-- Fonction caisse_balance() : somme des mouvements de auth.uid() (>= 0)
+CREATE OR REPLACE FUNCTION public.caisse_balance()
+RETURNS BIGINT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_balance BIGINT;
+BEGIN
+    SELECT COALESCE(SUM(amount), 0)::BIGINT
+    INTO v_balance
+    FROM public.caisse_movements
+    WHERE user_id = auth.uid();
+
+    IF v_balance < 0 THEN
+        RETURN 0::BIGINT;
+    END IF;
+
+    RETURN v_balance;
+END;
+$$;
+
+COMMENT ON FUNCTION public.caisse_balance() IS 'Calcule le solde courant de la caisse pour l''étudiant connecté (>= 0)';
+
+REVOKE EXECUTE ON FUNCTION public.caisse_balance() FROM anon;
+GRANT EXECUTE ON FUNCTION public.caisse_balance() TO authenticated;
+
 -- Fonction SQL d'incrémentation atomique (exécutée par l'Edge Function via service_role ou security definer)
 CREATE OR REPLACE FUNCTION public.check_and_increment_rate_limit(
     p_user_id UUID,
@@ -225,6 +283,7 @@ CREATE INDEX IF NOT EXISTS idx_category_rules_user_keyword
 CREATE OR REPLACE FUNCTION public.delete_user_account()
 RETURNS void AS $$
 BEGIN
+    DELETE FROM public.caisse_movements WHERE user_id = auth.uid();
     DELETE FROM public.expenses WHERE user_id = auth.uid();
     DELETE FROM public.budgets WHERE user_id = auth.uid();
     DELETE FROM public.category_rules WHERE user_id = auth.uid();

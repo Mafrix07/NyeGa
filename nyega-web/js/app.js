@@ -12,6 +12,8 @@
     user: null,
     categories: [],
     budget: null,
+    closedBudgets: null,
+    lastClosedBudget: null,
     expenses: [],
     userRules: [],
     currentFormCategory: null,
@@ -21,11 +23,52 @@
     expensesLoadError: null
   };
 
+  // Suivi de l'activité de l'onglet pour rappel de close_expired_budgets (> 1 heure)
+  let lastTabActiveTime = Date.now();
+
+  async function checkAndCloseExpiredBudgets() {
+    try {
+      if (!NyegaDB.isLive()) return;
+      const closedRows = await NyegaDB.closeExpiredBudgets();
+      if (closedRows && closedRows.length > 0) {
+        handleClosedBudgetsNotification(closedRows);
+        // Actualisation du budget actif et des budgets clôturés
+        state.budget = await NyegaDB.getBudget();
+        state.closedBudgets = await NyegaDB.getClosedBudgets();
+        state.lastClosedBudget = (state.closedBudgets && state.closedBudgets[0]) || null;
+        renderDashboard();
+        initBudgetForm();
+        renderHistoryClosedBudgets();
+        renderCaisseCard();
+      }
+    } catch (e) {
+      console.warn('Erreur non bloquante close_expired_budgets:', e.message || e);
+    }
+  }
+
+  function handleClosedBudgetsNotification(closedRows) {
+    let totalLeftover = 0;
+    let totalOverspend = 0;
+    closedRows.forEach(r => {
+      totalLeftover += (Number(r.leftover_amount) || 0);
+      totalOverspend += (Number(r.overspend_amount) || 0);
+    });
+
+    if (totalLeftover > 0) {
+      showToast(`Ta période est terminée. Il te restait ${formatFCFA(totalLeftover)}, ajoutés à ta caisse.`, 6000);
+    } else if (totalOverspend > 0) {
+      showToast(`Ta période est terminée avec un dépassement de ${formatFCFA(totalOverspend)}. C'est l'occasion de repartir du bon pied pour ta prochaine période !`, 6000);
+    } else {
+      showToast(`Ta période est terminée. Ton budget a été parfaitement respecté !`, 6000);
+    }
+  }
+
   // ==========================================================
   // INITIALISATION
   // ==========================================================
   document.addEventListener('DOMContentLoaded', async function() {
     await initApp();
+
     window.addEventListener('hashchange', function() {
       if (!state.budget && (window.location.hash === '#accueil' || !window.location.hash)) {
         window.location.hash = '#budget';
@@ -35,6 +78,34 @@
       }
       handleHashNavigation();
     });
+
+    // Surveillance de l'inactivité de l'onglet (> 1 heure)
+    document.addEventListener('visibilitychange', async function() {
+      if (document.visibilityState === 'visible') {
+        const now = Date.now();
+        const elapsed = now - lastTabActiveTime;
+        const ONE_HOUR_MS = 60 * 60 * 1000;
+        lastTabActiveTime = now;
+        if (elapsed > ONE_HOUR_MS) {
+          await checkAndCloseExpiredBudgets();
+        }
+      } else {
+        lastTabActiveTime = Date.now();
+      }
+    });
+
+    // Effacement de l'erreur sur date lors de la saisie
+    const expDateInput = document.getElementById('expenseDate');
+    if (expDateInput) {
+      expDateInput.addEventListener('input', function() {
+        const dateErrorEl = document.getElementById('expenseDateError');
+        if (dateErrorEl) {
+          dateErrorEl.classList.add('d-none');
+          dateErrorEl.style.display = 'none';
+          dateErrorEl.textContent = '';
+        }
+      });
+    }
   });
 
   async function initApp() {
@@ -75,6 +146,9 @@
       configModal.remove();
     }
 
+    // Clôture automatique au chargement des budgets expirés (non bloquante)
+    await checkAndCloseExpiredBudgets();
+
     // Chargement des données
     try {
       state.categories = await NyegaDB.getCategories();
@@ -86,6 +160,13 @@
       state.budget = await NyegaDB.getBudget();
     } catch (e) {
       console.warn('Erreur chargement budget:', e);
+    }
+
+    try {
+      state.closedBudgets = await NyegaDB.getClosedBudgets();
+      state.lastClosedBudget = (state.closedBudgets && state.closedBudgets[0]) || null;
+    } catch (e) {
+      console.warn('Erreur chargement budgets fermés:', e);
     }
 
     try {
@@ -103,32 +184,18 @@
       console.warn('Erreur chargement règles:', e);
     }
 
-    // Initialisation
+    // Initialisation des écrans
     init1TapPickerList();
     initHistoryFilters();
     initBudgetForm();
     setDefaultExpenseDate();
 
-    // ONBOARDING / BUDGET EXPIRÉ
-    // getBudget() renvoie null dans deux cas :
-    //   1. Jamais configuré → modale onboarding
-    //   2. Budget expiré (status passé à 'closed' par close_expired_budgets) → redirection + toast
+    // GESTION DU CYCLE BUDGÉTAIRE
     if (!state.budget) {
       window.location.hash = '#budget';
       navigateToScreen('budget', false);
-      // Détection : si un budget expiré existe, on affiche un message différent de l'onboarding
-      if (NyegaDB.isLive()) {
-        NyegaDB.getUser().then(function(u) {
-          if (!u) return;
-          // Vérifie s'il existe un budget clôturé (sans bloquer l'affichage)
-          window.NyegaDB._checkHasClosedBudget(u.id).then(function(hasClosed) {
-            if (hasClosed) {
-              showToast('⏰ Votre période budgétaire est terminée. Définissez un nouveau budget pour continuer.', 5000);
-            } else {
-              openInitialBudgetModal();
-            }
-          });
-        });
+      if (state.lastClosedBudget) {
+        showToast('⏰ Ta période est terminée. Définis un nouveau budget ou clique sur "Même budget, nouvelle période".', 6000);
       } else {
         openInitialBudgetModal();
       }
@@ -204,22 +271,23 @@
 
     const budgetTotal = Math.round(parseFloat(state.budget.monthly_amount || 0));
 
-    const periodStart = state.budget.period_start ? new Date(state.budget.period_start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const periodEnd = state.budget.period_end ? new Date(state.budget.period_end) : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+    // Calcul du dépensé uniquement sur la période du budget actif
+    const startStr = state.budget.period_start;
+    const endStr = state.budget.period_end;
 
     const totalSpent = state.expenses.reduce((sum, exp) => {
-      const expDate = new Date(exp.expense_date);
-      if (expDate >= periodStart && expDate <= periodEnd) {
+      const d = exp.expense_date;
+      if (d && (!startStr || d >= startStr) && (!endStr || d <= endStr)) {
         return sum + Math.round(parseFloat(exp.amount || 0));
       }
-      return sum + Math.round(parseFloat(exp.amount || 0));
+      return sum;
     }, 0);
 
     const remaining = budgetTotal - totalSpent;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const end = new Date(periodEnd);
+    const end = endStr ? new Date(endStr) : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
     end.setHours(0, 0, 0, 0);
     const diffTime = end.getTime() - today.getTime();
     const daysLeft = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
@@ -243,7 +311,19 @@
     if (elDays) elDays.innerText = daysLeft;
 
     const elEnd = document.getElementById('homePeriodEnd');
-    if (elEnd) elEnd.innerText = 'Fin : ' + formatDateFr(periodEnd);
+    if (elEnd) elEnd.innerText = 'Fin : ' + formatDateFr(end);
+
+    // Phrase discrète sur l'accueil
+    const noticeEl = document.getElementById('homePreviousPeriodNotice');
+    const startNoticeEl = document.getElementById('homePeriodStartDateNotice');
+    if (noticeEl && startNoticeEl) {
+      if (startStr) {
+        startNoticeEl.innerText = formatDateFr(startStr);
+        noticeEl.style.display = 'block';
+      } else {
+        noticeEl.style.display = 'none';
+      }
+    }
 
     // Indicateur de statut : Vert (#16A34A) / Orange (#D97706) / Rouge (#DC2626)
     const ratioSpent = budgetTotal > 0 ? (totalSpent / budgetTotal) : 1;
@@ -269,6 +349,59 @@
     }
 
     renderRecentExpenses();
+    renderCaisseCard();
+  }
+
+  async function renderCaisseCard() {
+    const balanceEl = document.getElementById('homeCaisseBalance');
+    const listEl = document.getElementById('homeCaisseMovementsList');
+    const emptyEl = document.getElementById('homeCaisseEmpty');
+    const errorEl = document.getElementById('homeCaisseError');
+    if (!balanceEl || !listEl) return;
+
+    if (errorEl) errorEl.style.display = 'none';
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    try {
+      const balance = await NyegaDB.getCaisseBalance();
+      balanceEl.innerText = formatFCFA(balance);
+
+      const movements = await NyegaDB.getCaisseMovements();
+      if (!movements || movements.length === 0) {
+        listEl.innerHTML = '';
+        if (emptyEl) emptyEl.style.display = 'block';
+      } else {
+        const recent = movements.slice(0, 3);
+        listEl.innerHTML = recent.map(m => {
+          const amt = Number(m.amount) || 0;
+          const isPositive = amt > 0;
+          const amtClass = isPositive ? 'text-success' : 'text-danger';
+          const sign = isPositive ? '+' : '';
+          const dateStr = m.created_at ? formatDateFr(m.created_at.split('T')[0]) : '';
+          const noteStr = escapeHTML(m.note || (m.type === 'leftover' ? 'Économies période terminée' : 'Mouvement de caisse'));
+          return `
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="font-size:13px;">
+              <div>
+                <div class="font-weight-bold" style="color:var(--ny-on-surface);">${noteStr}</div>
+                <div class="text-muted" style="font-size:11px;">${dateStr}</div>
+              </div>
+              <div class="font-weight-bold ${amtClass}" style="white-space:nowrap;">
+                ${sign}${formatFCFA(Math.abs(amt))}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    } catch (err) {
+      console.warn('Erreur rendu caisse:', err.message);
+      balanceEl.innerText = '-- FCFA';
+      listEl.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (errorEl) {
+        errorEl.style.display = 'block';
+        errorEl.innerText = 'Caisse indisponible, réessaie';
+      }
+    }
   }
 
   function renderRecentExpenses() {
@@ -423,9 +556,19 @@
 
     } catch (err) {
       console.error('Échec ajout dépense:', err);
-      // Affichage d'un message clair en français sans prétendre que la dépense est enregistrée
       const msg = err.message || "Impossible d'enregistrer la dépense : le serveur Supabase est injoignable. Votre dépense n'a pas été enregistrée.";
-      showToast(`❌ ${msg}`);
+      const dateErrorEl = document.getElementById('expenseDateError');
+
+      if (msg.includes('Cette période est terminée') || msg.includes('période est terminée') || msg.includes('choisis une date plus récente')) {
+        if (dateErrorEl) {
+          dateErrorEl.textContent = 'Cette période est terminée, choisis une date plus récente.';
+          dateErrorEl.classList.remove('d-none');
+          dateErrorEl.style.display = 'block';
+        }
+        showToast('❌ Cette période est terminée, choisis une date plus récente.');
+      } else {
+        showToast(`❌ ${msg}`);
+      }
     } finally {
       setBtnLoading(btn, false);
     }
@@ -578,13 +721,35 @@
       `;
       const countBadge = document.getElementById('historyCountBadge');
       if (countBadge) countBadge.innerText = 'Indisponible';
+      renderHistoryClosedBudgets();
       return;
     }
 
+    const periodFilter = document.getElementById('historyFilterPeriod')?.value || 'current';
     const catFilter = document.getElementById('historyFilterCategory')?.value || 'all';
     const sortVal = document.getElementById('historySortBy')?.value || 'date-desc';
 
     let filtered = [...state.expenses];
+
+    // Filtrage par période (Cette période, Période précédente, Tout)
+    if (periodFilter === 'current' && state.budget) {
+      filtered = filtered.filter(e => {
+        const d = e.expense_date;
+        return (!state.budget.period_start || d >= state.budget.period_start) &&
+               (!state.budget.period_end || d <= state.budget.period_end);
+      });
+    } else if (periodFilter === 'previous') {
+      const prevBudget = state.lastClosedBudget;
+      if (prevBudget) {
+        filtered = filtered.filter(e => {
+          const d = e.expense_date;
+          return (!prevBudget.period_start || d >= prevBudget.period_start) &&
+                 (!prevBudget.period_end || d <= prevBudget.period_end);
+        });
+      } else {
+        filtered = [];
+      }
+    }
 
     if (catFilter !== 'all') {
       filtered = filtered.filter(e => e.category_id === catFilter);
@@ -611,10 +776,72 @@
           <p class="small text-muted">Ajustez vos filtres ou enregistrez une nouvelle dépense.</p>
         </div>
       `;
+    } else {
+      listEl.innerHTML = filtered.map(exp => createExpenseItemHTML(exp, true)).join('');
+    }
+
+    renderHistoryClosedBudgets();
+  }
+
+  async function renderHistoryClosedBudgets() {
+    const container = document.getElementById('historyClosedBudgetsContainer');
+    const list = document.getElementById('historyClosedBudgetsList');
+    if (!container || !list) return;
+
+    if (!state.closedBudgets && NyegaDB.isLive()) {
+      try {
+        state.closedBudgets = await NyegaDB.getClosedBudgets();
+        state.lastClosedBudget = (state.closedBudgets && state.closedBudgets[0]) || null;
+      } catch (e) {
+        console.warn('Erreur chargement budgets fermés:', e);
+      }
+    }
+
+    const closed = state.closedBudgets || [];
+    if (closed.length === 0) {
+      container.style.display = 'none';
       return;
     }
 
-    listEl.innerHTML = filtered.map(exp => createExpenseItemHTML(exp, true)).join('');
+    container.style.display = 'block';
+    list.innerHTML = closed.map(b => {
+      const budgetAmt = Math.round(Number(b.monthly_amount) || 0);
+
+      const spent = state.expenses.reduce((acc, exp) => {
+        const d = exp.expense_date;
+        if (d && (!b.period_start || d >= b.period_start) && (!b.period_end || d <= b.period_end)) {
+          return acc + Math.round(Number(exp.amount) || 0);
+        }
+        return acc;
+      }, 0);
+
+      const leftover = (b.closing_leftover != null) ? Number(b.closing_leftover) : Math.max(0, budgetAmt - spent);
+      const overspend = (b.closing_overspend != null) ? Number(b.closing_overspend) : Math.max(0, spent - budgetAmt);
+
+      let resultBadge = '';
+      if (leftover > 0) {
+        resultBadge = `<span class="badge badge-success px-2 py-1">+${formatFCFA(leftover)} versé en caisse</span>`;
+      } else if (overspend > 0) {
+        resultBadge = `<span class="badge badge-warning px-2 py-1">-${formatFCFA(overspend)} dépassement</span>`;
+      } else {
+        resultBadge = `<span class="badge badge-secondary px-2 py-1">0 FCFA équilibré</span>`;
+      }
+
+      return `
+        <div class="p-3 mb-2 rounded border" style="background:var(--ny-surface-variant);">
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" style="gap:6px;">
+            <strong style="color:var(--ny-primary); font-size:14px;">
+              <i class="fa fa-calendar-o mr-1"></i> Du ${formatDateFr(b.period_start)} au ${formatDateFr(b.period_end)}
+            </strong>
+            ${resultBadge}
+          </div>
+          <div class="small text-muted d-flex justify-content-between flex-wrap" style="gap:10px;">
+            <span>Budget alloué : <strong class="text-dark">${formatFCFA(budgetAmt)}</strong></span>
+            <span>Total dépensé : <strong class="text-dark">${formatFCFA(spent)}</strong></span>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   function createExpenseItemHTML(exp, withActions = true) {
@@ -890,20 +1117,94 @@
   // ==========================================================
   // ÉCRAN 6 : CONFIGURATION DU BUDGET (FCFA)
   // ==========================================================
-  function initBudgetForm() {
+  async function initBudgetForm() {
     const bAmt = document.getElementById('budgetAmount');
     const bStart = document.getElementById('budgetStartDate');
     const bEnd = document.getElementById('budgetEndDate');
+    const bStartHelp = document.getElementById('budgetStartDateHelp');
+    const boxNext = document.getElementById('boxNextPeriodBudget');
 
-    if (bAmt && state.budget) {
-      bAmt.value = state.budget.monthly_amount;
+    const hasActiveBudget = !!(state.budget && state.budget.status === 'active');
+
+    if (!state.lastClosedBudget && NyegaDB.isLive()) {
+      try {
+        state.lastClosedBudget = await NyegaDB.getLastClosedBudget();
+      } catch (e) {}
     }
-    if (bStart && state.budget) {
-      bStart.value = state.budget.period_start;
+
+    if (boxNext) {
+      boxNext.style.display = (!hasActiveBudget && state.lastClosedBudget) ? 'block' : 'none';
     }
-    if (bEnd && state.budget) {
+
+    if (bAmt) {
+      if (state.budget) {
+        bAmt.value = state.budget.monthly_amount;
+      } else if (state.lastClosedBudget) {
+        bAmt.value = state.lastClosedBudget.monthly_amount;
+      }
+    }
+
+    if (bStart) {
+      if (state.budget && state.budget.period_start) {
+        bStart.value = state.budget.period_start;
+      }
+      if (hasActiveBudget) {
+        bStart.disabled = true;
+        if (bStartHelp) {
+          bStartHelp.classList.remove('d-none');
+          bStartHelp.style.display = 'block';
+          bStartHelp.textContent = 'La date de début ne peut pas être changée.';
+        }
+      } else {
+        bStart.disabled = false;
+        if (bStartHelp) {
+          bStartHelp.classList.add('d-none');
+          bStartHelp.style.display = 'none';
+        }
+      }
+    }
+
+    if (bEnd && state.budget && state.budget.period_end) {
       bEnd.value = state.budget.period_end;
     }
+  }
+
+  async function handleProposeNextPeriodBudget() {
+    if (!state.lastClosedBudget && NyegaDB.isLive()) {
+      state.lastClosedBudget = await NyegaDB.getLastClosedBudget();
+    }
+    if (!state.lastClosedBudget) {
+      showToast('Aucun budget précédent trouvé.');
+      return;
+    }
+
+    const prevEndStr = String(state.lastClosedBudget.period_end || '').trim();
+    const parts = prevEndStr.split('-').map(Number);
+    const prevEndUtc = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+    prevEndUtc.setUTCDate(prevEndUtc.getUTCDate() + 1);
+    const nextStartStr = prevEndUtc.toISOString().split('T')[0];
+
+    // Fin du mois correspondant en UTC
+    const nextEndUtc = new Date(Date.UTC(prevEndUtc.getUTCFullYear(), prevEndUtc.getUTCMonth() + 1, 0));
+    const nextEndStr = nextEndUtc.toISOString().split('T')[0];
+
+    const bAmt = document.getElementById('budgetAmount');
+    const bStart = document.getElementById('budgetStartDate');
+    const bEnd = document.getElementById('budgetEndDate');
+    const bStartHelp = document.getElementById('budgetStartDateHelp');
+
+    if (bAmt) bAmt.value = state.lastClosedBudget.monthly_amount;
+    if (bStart) {
+      bStart.value = nextStartStr;
+      bStart.disabled = false;
+    }
+    if (bStartHelp) {
+      bStartHelp.classList.add('d-none');
+      bStartHelp.style.display = 'none';
+    }
+    if (bEnd) bEnd.value = nextEndStr;
+
+    showToast(`Nouvelle période proposée : du ${formatDateFr(nextStartStr)} au ${formatDateFr(nextEndStr)}. Vérifiez et validez !`);
   }
 
   async function handleSaveBudget(event) {
@@ -918,6 +1219,22 @@
       return;
     }
 
+    if (!startDate || !endDate) {
+      showToast('Veuillez renseigner les dates de début et de fin de période.');
+      return;
+    }
+
+    if (endDate < startDate) {
+      showToast('La date de fin ne peut pas être antérieure à la date de début.');
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (endDate < todayStr) {
+      showToast('La date de fin ne peut pas être dans le passé.');
+      return;
+    }
+
     const btn = document.getElementById('btnSaveBudget');
     setBtnLoading(btn, true);
 
@@ -929,14 +1246,15 @@
       });
 
       state.budget = updated;
-      showToast(`Budget mis à jour : ${formatFCFA(amount)} !`);
+      showToast(`Budget enregistré : ${formatFCFA(amount)} !`);
       renderDashboard();
+      initBudgetForm();
 
       setTimeout(() => {
         navigateToScreen('accueil');
       }, 400);
     } catch (err) {
-      showToast('Erreur : ' + err.message);
+      showToast('Erreur : ' + (err.message || 'Impossible d\'enregistrer'));
     } finally {
       setBtnLoading(btn, false);
     }
@@ -1099,54 +1417,97 @@
   // ==========================================================
   function sanitizeCSVField(val) {
     let str = String(val == null ? '' : val);
-    // Protection anti-CSV Injection (CWE-1236) : neutralise =, +, -, @, tab, newline
-    if (/^[=+\-@\t\r]/.test(str)) {
+    // Protection anti-CSV Injection (CWE-1236) : neutralise =, +, -, @, tab, newline (y compris précédés d'espaces)
+    if (/^\s*[=+\-@\t\r]/.test(str)) {
       str = "'" + str;
     }
     return `"${str.replace(/"/g, '""')}"`;
   }
 
-  function exportExpensesCSV() {
-    if (!state.expenses || state.expenses.length === 0) {
-      showToast('Aucune dépense à exporter.');
-      return;
+  async function exportCaisseCSV() {
+    try {
+      const movements = await NyegaDB.getCaisseMovements();
+      if (!movements || movements.length === 0) {
+        return false;
+      }
+      const headers = ['Date', 'Montant (FCFA)', 'Type', 'Note'];
+      const rows = movements.map(m => {
+        const cleanDate = sanitizeCSVField(m.created_at ? m.created_at.split('T')[0] : '');
+        const cleanAmount = Math.round(Number(m.amount) || 0);
+        const cleanType = sanitizeCSVField(m.type || '');
+        const cleanNote = sanitizeCSVField(m.note || '');
+        return [cleanDate, cleanAmount, cleanType, cleanNote].join(';');
+      });
+      const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const today = new Date().toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      link.setAttribute('download', `nyega_caisse_${today}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return true;
+    } catch (e) {
+      console.warn('Erreur export caisse CSV:', e);
+      return false;
+    }
+  }
+
+  async function exportExpensesCSV() {
+    let hasExportedAny = false;
+
+    if (state.expenses && state.expenses.length > 0) {
+      const headers = ['Date', 'Montant (FCFA)', 'Catégorie', 'Moyen de Paiement', 'Description'];
+      const rows = state.expenses.map(exp => {
+        const cat = state.categories.find(c => c.id === exp.category_id);
+        const catName = cat ? cat.name : 'Autres';
+        const cleanDate = sanitizeCSVField(exp.expense_date || '');
+        const cleanAmount = Math.round(Number(exp.amount) || 0);
+        const cleanCat = sanitizeCSVField(catName);
+        const cleanPay = sanitizeCSVField(exp.payment_method || 'Espèces');
+        const cleanDesc = sanitizeCSVField(exp.description || '');
+        return [
+          cleanDate,
+          cleanAmount,
+          cleanCat,
+          cleanPay,
+          cleanDesc
+        ].join(';');
+      });
+
+      const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const today = new Date().toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      link.setAttribute('download', `nyega_depenses_${today}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      hasExportedAny = true;
     }
 
-    const headers = ['Date', 'Montant (FCFA)', 'Catégorie', 'Moyen de Paiement', 'Description'];
-    const rows = state.expenses.map(exp => {
-      const cat = state.categories.find(c => c.id === exp.category_id);
-      const catName = cat ? cat.name : 'Autres';
-      const cleanDate = sanitizeCSVField(exp.expense_date || '');
-      const cleanAmount = Math.round(Number(exp.amount) || 0);
-      const cleanCat = sanitizeCSVField(catName);
-      const cleanPay = sanitizeCSVField(exp.payment_method || 'Espèces');
-      const cleanDesc = sanitizeCSVField(exp.description || '');
-      return [
-        cleanDate,
-        cleanAmount,
-        cleanCat,
-        cleanPay,
-        cleanDesc
-      ].join(';');
-    });
+    // Inclusion des mouvements de caisse dans l'export des données
+    const caisseExported = await exportCaisseCSV();
+    if (caisseExported) {
+      hasExportedAny = true;
+    }
 
-    const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const today = new Date().toISOString().split('T')[0];
-    link.setAttribute('href', url);
-    link.setAttribute('download', `nyega_depenses_${today}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Export CSV téléchargé avec succès !');
+    if (!hasExportedAny) {
+      showToast('Aucune donnée (dépense ou caisse) à exporter.');
+    } else {
+      showToast('Export des données téléchargé avec succès !');
+    }
   }
 
   async function handleDeleteAccount() {
     const msg = "⚠️ ATTENTION : La suppression de votre compte est définitive et irréversible.\n\n" +
-      "Toutes vos dépenses, vos budgets, vos règles personnalisées et votre profil seront définitivement effacés conformément à la Loi 2019-014.\n\n" +
+      "Toutes vos dépenses, vos budgets, vos mouvements de caisse, vos règles personnalisées et votre profil seront définitivement effacés conformément à la Loi 2019-014.\n\n" +
       "Voulez-vous vraiment continuer ?";
     if (!confirm(msg)) return;
 
@@ -1159,14 +1520,10 @@
     try {
       showToast('Suppression de vos données en cours...');
       await NyegaDB.deleteAccount();
-      try {
-        localStorage.clear();
-        sessionStorage.clear();
-      } catch (e) {}
       alert('Votre compte et l\'intégralité de vos données ont été définitivement supprimés.');
       window.location.href = 'auth.html';
     } catch (err) {
-      showToast('Erreur lors de la suppression : ' + (err.message || err));
+      showToast(err.message || 'Suppression impossible, réessaie');
     }
   }
 
@@ -1180,6 +1537,7 @@
   window.handleCreateExpense = handleCreateExpense;
   window.loadHistoryExpenses = loadHistoryExpenses;
   window.handleSaveBudget = handleSaveBudget;
+  window.handleProposeNextPeriodBudget = handleProposeNextPeriodBudget;
   window.handleLogout = handleLogout;
   window.showToast = showToast;
   window.openInitialBudgetModal = openInitialBudgetModal;
@@ -1190,6 +1548,9 @@
   window.closeConfigModal = closeConfigModal;
   window.handleSaveConfig = handleSaveConfig;
   window.exportExpensesCSV = exportExpensesCSV;
+  window.exportCaisseCSV = exportCaisseCSV;
   window.handleDeleteAccount = handleDeleteAccount;
+  window.renderCaisseCard = renderCaisseCard;
+  window.renderHistoryClosedBudgets = renderHistoryClosedBudgets;
 
 })(window);

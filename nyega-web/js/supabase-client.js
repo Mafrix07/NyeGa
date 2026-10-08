@@ -172,23 +172,14 @@
     deleteAccount: async function() {
       if (this.isLive()) {
         const user = await this.getUser();
-        if (!user) throw new Error('Utilisateur non connecté');
+        if (!user) throw new Error('Suppression impossible, réessaie');
 
-        // Tentative d'utilisation de la procédure atomique delete_user_account()
-        try {
-          const { error: rpcErr } = await client.rpc('delete_user_account');
-          if (!rpcErr) {
-            await client.auth.signOut();
-            try { localStorage.clear(); sessionStorage.clear(); } catch(e){}
-            return true;
-          }
-        } catch(e) {}
+        const { error: rpcErr } = await client.rpc('delete_user_account');
+        if (rpcErr) {
+          console.error('Erreur RPC delete_user_account:', rpcErr);
+          throw new Error('Suppression impossible, réessaie');
+        }
 
-        // Fallback suppression séquentielle sous RLS
-        await client.from('expenses').delete().eq('user_id', user.id);
-        await client.from('budgets').delete().eq('user_id', user.id);
-        await client.from('category_rules').delete().eq('user_id', user.id);
-        await client.from('profiles').delete().eq('id', user.id);
         await client.auth.signOut();
       }
       try {
@@ -347,19 +338,37 @@
     // -------------------------------------------------------------
     // BUDGET (FCFA)
     // -------------------------------------------------------------
+    // Helper de traduction des erreurs PostgreSQL / Supabase sur les budgets
+    _mapBudgetError: function(error) {
+      if (!error) return new Error("Une erreur est survenue lors de l'enregistrement du budget.");
+      const msg = ((error.message || '') + ' ' + (error.details || '') + ' ' + (error.hint || '')).toLowerCase();
+
+      if (error.code === '23505' || msg.includes('budgets_one_active_per_user') || msg.includes('déjà actif') || msg.includes('deja actif')) {
+        return new Error('Un budget est déjà actif.');
+      }
+      if (error.code === '23P01' || error.code === '23p01' || msg.includes('excl_budgets_no_overlap') || msg.includes('overlap') || msg.includes('chevauche')) {
+        return new Error('Cette période chevauche un budget existant.');
+      }
+      if (msg.includes('chk_budgets_period_order') || msg.includes('period_order')) {
+        return new Error('La date de fin ne peut pas être antérieure à la date de début.');
+      }
+      if (msg.includes('chk_budgets_monthly_amount_positive') || msg.includes('monthly_amount_positive')) {
+        return new Error('Le montant du budget doit être supérieur à 0 FCFA.');
+      }
+      if (msg.includes('cette période est terminée') || msg.includes('période du budget est déjà terminée') || msg.includes('periode du budget est deja terminee') || msg.includes('déjà terminée') || msg.includes('deja terminee')) {
+        return new Error('La période du budget est déjà terminée.');
+      }
+      if (msg.includes('date de fin ne peut pas être dans le passé') || msg.includes('dans le passe') || msg.includes('dans le passé')) {
+        return new Error('La date de fin ne peut pas être dans le passé.');
+      }
+      return new Error(error.message || "Erreur lors de l'enregistrement du budget.");
+    },
+
     getBudget: async function() {
       if (this.isLive()) {
         try {
           const user = await this.getUser();
           if (user) {
-            // Clôture côté serveur des budgets dont period_end est dépassé (idempotente, fuseau Africa/Lome)
-            try {
-              await client.rpc('close_expired_budgets');
-            } catch (rpcErr) {
-              // La fonction n'existe pas encore en base : on continue sans bloquer
-              console.warn('close_expired_budgets non disponible:', rpcErr.message);
-            }
-
             const { data, error } = await client
               .from('budgets')
               .select('*')
@@ -382,42 +391,131 @@
       return LocalStore.getBudget();
     },
 
+    closeExpiredBudgets: async function() {
+      if (this.isLive()) {
+        try {
+          const { data, error } = await client.rpc('close_expired_budgets');
+          if (error) {
+            console.warn('Erreur RPC close_expired_budgets:', error.message);
+            return [];
+          }
+          return Array.isArray(data) ? data : [];
+        } catch (e) {
+          console.warn('Exception close_expired_budgets:', e.message);
+          return [];
+        }
+      }
+      return [];
+    },
+
+    getClosedBudgets: async function() {
+      if (this.isLive()) {
+        try {
+          const user = await this.getUser();
+          if (!user) return [];
+          const { data, error } = await client
+            .from('budgets')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('status', 'closed')
+            .order('period_end', { ascending: false });
+          if (error) throw error;
+          return data || [];
+        } catch (e) {
+          console.warn('Erreur lecture budgets fermés:', e.message);
+          return [];
+        }
+      }
+      return [];
+    },
+
+    getLastClosedBudget: async function() {
+      const closed = await this.getClosedBudgets();
+      return (closed && closed.length > 0) ? closed[0] : null;
+    },
+
     saveBudget: async function(budgetData) {
       if (this.isLive()) {
         const user = await this.getUser();
-        if (user) {
-          const payload = {
-            user_id: user.id,
-            monthly_amount: Math.round(parseFloat(budgetData.monthly_amount)),
-            period_start: budgetData.period_start,
-            period_end: budgetData.period_end,
-            status: 'active',
-            updated_at: new Date().toISOString()
+        if (!user) throw new Error('Utilisateur non connecté');
+
+        const monthlyAmount = Math.round(parseFloat(budgetData.monthly_amount));
+        if (!monthlyAmount || monthlyAmount <= 0) {
+          throw new Error('Le montant du budget doit être supérieur à 0 FCFA.');
+        }
+
+        const startDate = String(budgetData.period_start || '').trim();
+        const endDate = String(budgetData.period_end || '').trim();
+        if (!startDate || !endDate) {
+          throw new Error('Veuillez spécifier les dates de début et de fin de période.');
+        }
+
+        if (endDate < startDate) {
+          throw new Error('La date de fin ne peut pas être antérieure à la date de début.');
+        }
+
+        const todayUtc = new Date().toISOString().split('T')[0];
+        if (endDate < todayUtc) {
+          throw new Error('La date de fin ne peut pas être dans le passé.');
+        }
+
+        // Le budget à modifier est recherché exclusivement avec .eq('status','active')
+        const { data: existing, error: searchErr } = await client
+          .from('budgets')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .limit(1);
+
+        if (searchErr) throw this._mapBudgetError(searchErr);
+
+        if (existing && existing.length > 0) {
+          // UPDATE :
+          // - Pas de user_id
+          // - Pas de updated_at (géré par trigger)
+          // - Jamais de status ni de closing_*
+          const updatePayload = {
+            monthly_amount: monthlyAmount,
+            period_start: startDate,
+            period_end: endDate
           };
 
-          const { data: existing } = await client
+          const { data, error } = await client
             .from('budgets')
-            .select('id')
-            .eq('user_id', user.id)
+            .update(updatePayload)
+            .eq('id', existing[0].id)
             .eq('status', 'active')
-            .limit(1);
+            .select();
 
-          if (existing && existing.length > 0) {
-            const { data, error } = await client
-              .from('budgets')
-              .update(payload)
-              .eq('id', existing[0].id)
-              .select();
-            if (error) throw error;
-            return data[0];
-          } else {
-            const { data, error } = await client
-              .from('budgets')
-              .insert([payload])
-              .select();
-            if (error) throw error;
-            return data[0];
+          if (error) throw this._mapBudgetError(error);
+          if (!data || data.length === 0) {
+            throw new Error("Aucun budget actif n'a pu être mis à jour. La période est peut-être déjà clôturée.");
           }
+          return data[0];
+        } else {
+          // INSERT :
+          // - user_id, monthly_amount, period_start, period_end
+          // - Pas de updated_at
+          // - Pas de status (DEFAULT 'active' en base)
+          // - Pas de colonnes closing_*
+          // - Pas d'alert_threshold_* (DEFAULT en base)
+          const insertPayload = {
+            user_id: user.id,
+            monthly_amount: monthlyAmount,
+            period_start: startDate,
+            period_end: endDate
+          };
+
+          const { data, error } = await client
+            .from('budgets')
+            .insert([insertPayload])
+            .select();
+
+          if (error) throw this._mapBudgetError(error);
+          if (!data || data.length === 0) {
+            throw new Error("Impossible d'enregistrer le nouveau budget.");
+          }
+          return data[0];
         }
       }
       LocalStore.saveBudget(budgetData);
@@ -503,6 +601,10 @@
 
       if (error) {
         console.error('Erreur insertion dépense Supabase:', error);
+        const errMsg = error.message || '';
+        if (errMsg.includes('Cette période est terminée') || errMsg.includes('période est terminée') || errMsg.includes('choisis une date plus récente')) {
+          throw new Error('Cette période est terminée, choisis une date plus récente.');
+        }
         throw new Error("Échec de l'enregistrement sur Supabase (" + (error.message || 'serveur injoignable') + "). Votre dépense n'a pas été enregistrée.");
       }
 
@@ -534,6 +636,10 @@
 
       if (error) {
         console.error('Erreur mise à jour dépense Supabase:', error);
+        const errMsg = error.message || '';
+        if (errMsg.includes('Cette période est terminée') || errMsg.includes('période est terminée') || errMsg.includes('choisis une date plus récente')) {
+          throw new Error('Cette période est terminée, choisis une date plus récente.');
+        }
         throw new Error("Échec de la modification sur Supabase (" + (error.message || 'serveur injoignable') + ").");
       }
 
@@ -556,6 +662,43 @@
       }
 
       return true;
+    },
+
+    // -------------------------------------------------------------
+    // CAISSE (ÉPARGNE ÉTUDIANTE EN FCFA)
+    // -------------------------------------------------------------
+    getCaisseBalance: async function() {
+      if (!this.isLive()) {
+        throw new Error('Caisse indisponible, réessaie');
+      }
+      try {
+        const { data, error } = await client.rpc('caisse_balance');
+        if (error) throw error;
+        return typeof data === 'number' ? data : (parseInt(data, 10) || 0);
+      } catch (e) {
+        console.error('Erreur lecture caisse_balance RPC:', e.message);
+        throw new Error('Caisse indisponible, réessaie');
+      }
+    },
+
+    getCaisseMovements: async function() {
+      if (!this.isLive()) {
+        throw new Error('Caisse indisponible, réessaie');
+      }
+      try {
+        const user = await this.getUser();
+        if (!user) throw new Error('Utilisateur non connecté');
+        const { data, error } = await client
+          .from('caisse_movements')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
+      } catch (e) {
+        console.error('Erreur lecture caisse_movements:', e.message);
+        throw new Error('Caisse indisponible, réessaie');
+      }
     }
   };
 
