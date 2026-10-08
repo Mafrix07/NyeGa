@@ -1178,14 +1178,15 @@
       return;
     }
 
-    const prevEndStr = state.lastClosedBudget.period_end;
-    const prevEnd = new Date(prevEndStr);
-    const nextStart = new Date(prevEnd);
-    nextStart.setDate(nextStart.getDate() + 1);
-    const nextStartStr = nextStart.toISOString().split('T')[0];
+    const prevEndStr = String(state.lastClosedBudget.period_end || '').trim();
+    const parts = prevEndStr.split('-').map(Number);
+    const prevEndUtc = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+    prevEndUtc.setUTCDate(prevEndUtc.getUTCDate() + 1);
+    const nextStartStr = prevEndUtc.toISOString().split('T')[0];
 
-    const nextEnd = new Date(nextStart.getFullYear(), nextStart.getMonth() + 1, 0);
-    const nextEndStr = nextEnd.toISOString().split('T')[0];
+    // Fin du mois correspondant en UTC
+    const nextEndUtc = new Date(Date.UTC(prevEndUtc.getUTCFullYear(), prevEndUtc.getUTCMonth() + 1, 0));
+    const nextEndStr = nextEndUtc.toISOString().split('T')[0];
 
     const bAmt = document.getElementById('budgetAmount');
     const bStart = document.getElementById('budgetStartDate');
